@@ -1,11 +1,11 @@
 # SAX Parser for Deno
 
-The basic design of this sax-parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
+The basic logic of this sax-parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
 
 ## Usage
 
 ```typescript
-import { SAXParser } from 'https://raw.githubusercontent.com/m-kur/saxp/master/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/saxp/mod.ts';
 
 const parser = new SAXParser();
 parser.on('start_prefix_mapping', (ns, uri) => {

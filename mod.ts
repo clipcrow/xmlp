@@ -15,9 +15,11 @@ export class SAXParser implements Locatable, UnderlyingSink<Uint8Array> {
     private _current = '';
 
     /*
-        The basic design of this sax-parser was obtained by reading the source code of SAX-JS.
+        The basic logic of this sax-parser was obtained by reading the source code of sax-js.
         Thanks & see: https://github.com/isaacs/sax-js
 
+        STATE                     XML
+        ------------------------  ------------------
         BEFORE_DOCUMENT
         GENERAL_STUFF
         FOUND_LT                  <
