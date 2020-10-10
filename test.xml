@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:m="https://saxp.test/m">
+	<channel>
+		<title>SAX Parser for Deno</title>
+		<description>SAX Parser Library for Deno Stream Writer</description>
+		<link>https://saxp.test/m/saxp</link>
+		<atom:link href="https://saxp.test/m/saxp" rel="self" type="application/rss+xml"/>
+		<lastBuildDate>Sat, 10 Oct 2020 9:00:00 GMT</lastBuildDate>
+		<managingEditor><![CDATA[Masataka Kurihara <m@botsignal.com>]]></managingEditor>
+		<item>
+			<title>Getting Start</title>
+			<link>https://saxp.test/m/saxp/2020/10/10/</link>
+			<guid isPermaLink="false">urn:uuid:12345678-abcd-efgh-ijkl-90mn123opq4r</guid>
+			<pubDate>Sat, 10 Oct 2020 12:00:00 GMT</pubDate>
+			<description>SAXPの利用方法と、サンプルコード</description>
+			<m:comment id="0">Good</m:comment>
+			<m:comment id="1">Bad</m:comment>
+			<m:comment id="2">Foo</m:comment>
+			<m:star>20</m:star>
+		</item>
+	</channel>
+</rss>
