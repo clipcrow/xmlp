@@ -16,12 +16,11 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }} # runs a test on Ubuntu, Windows and macOS
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        deno: ["v1.x", "nightly"]
-        os: [macOS-latest, windows-latest, ubuntu-latest]
+        deno: ["v1.4.4"]
 
     steps:
       - name: Setup repo
@@ -30,7 +29,7 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@c7d7968ad4a59c159a777f79adddad6872ee8d96
         with:
-          deno-version: ${{ matrix.deno }} # tests across multiple Deno versions
+          deno-version: ${{ matrix.deno }}
 
       - name: Run Tests
         run: deno test -A --unstable
