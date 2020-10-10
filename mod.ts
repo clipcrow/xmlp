@@ -4,7 +4,7 @@ import * as handler from './handler.ts';
 // deno-lint-ignore no-explicit-any
 type SAXListener = (...arg: any[]) => void;
 
-export class SAXParser implements Emittable, Locatable, UnderlyingSink<Uint8Array> {
+export class SAXParser implements Locatable, UnderlyingSink<Uint8Array> {
     private _handlers: { [state: string]: SAXHandler } = {};
     private _listeners: { [event: string]: SAXListener[] } = {};
     private _controller?: WritableStreamDefaultController;
@@ -70,7 +70,7 @@ export class SAXParser implements Emittable, Locatable, UnderlyingSink<Uint8Arra
         this.appendHandler('AFTER_DOCUMENT', handler.handleAfterDocument);
     }
 
-    appendHandler(state: string, handler: SAXHandler): this {
+    protected appendHandler(state: string, handler: SAXHandler): this {
         this._handlers[state] = handler;
         return this;
     }
@@ -112,7 +112,7 @@ export class SAXParser implements Emittable, Locatable, UnderlyingSink<Uint8Arra
                     throw new Error(`Handler for ${state} not found`);
                 }
                 const c = this.readNext();
-                handler(this._cx, c, this);
+                handler(this._cx, c, this.emitter);
             }
         } catch(e) {
             this._controller?.error(e);
@@ -137,6 +137,21 @@ export class SAXParser implements Emittable, Locatable, UnderlyingSink<Uint8Arra
         };
     }
 
+    protected get emitter(): Emittable {
+        const listeners = this._listeners;
+        return {
+            // deno-lint-ignore no-explicit-any
+            emit(event: string, ...args: any[]) {
+                const list = listeners[event];
+                if (list) {
+                    list.forEach((listener) => {
+                        listener.call(this, ...args);
+                    });
+                }
+            }
+        };
+    }
+
     on(event: 'start_document', listener: () => void): this;
     on(event: 'doctype', listener: (doctype: string) => void): this;
     on(event: 'sgml_declaration', listener: (sgmlDecl: string) => void): this;
@@ -153,15 +168,5 @@ export class SAXParser implements Emittable, Locatable, UnderlyingSink<Uint8Arra
         list.push(listener);
         this._listeners[event] = list;
         return this;
-    }
-
-    // deno-lint-ignore no-explicit-any
-    emit(event: string, ...args: any[]) {
-        const list = this._listeners[event];
-        if (list) {
-            list.forEach((listener) => {
-                listener.call(this, ...args);
-            });
-        }
     }
 }

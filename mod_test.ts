@@ -35,7 +35,7 @@ Deno.test('sax parse', async () => {
     }).on('end_prefix_mapping', (ns, uri) => {
         console.log(`mapping end ${ns}: ${uri}`);
     });
-    const file = await Deno.open('test.xml');
+    const file = await Deno.open('mod_test.xml');
     await Deno.copy(file, parser.getWriter());
     file.close();
 });
