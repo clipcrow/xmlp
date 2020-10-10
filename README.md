@@ -1,6 +1,6 @@
 # SAX Parser for Deno
 
-The basic design of this sax-parser was obtained by reading the source code of [SAX-JS](https://github.com/isaacs/sax-js). Thanks.
+The basic design of this sax-parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
 
 ## Usage
 
@@ -17,3 +17,8 @@ const file = await Deno.open('mod_test.xml');
 await Deno.copy(file, parser.getWriter());
 file.close();
 ```
+
+## License
+
+The scripts and documentation in this project are released under the
+[MIT License](LICENSE)
