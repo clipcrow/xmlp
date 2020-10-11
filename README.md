@@ -5,7 +5,7 @@
 ## SAXParser
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.5/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.6/mod.ts';
 
 // create a SAX parser instance
 const parser = new SAXParser();
@@ -28,7 +28,7 @@ file.close();
 ## PullParser
 
 ```typeScript
-import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.5/mod.ts';
+import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.6/mod.ts';
 
 // create a pull parser instance
 const parser = new PullParser();
