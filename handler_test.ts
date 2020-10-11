@@ -17,10 +17,14 @@ Deno.test('handleBeforeDocument', () => {
 
 Deno.test('handleGeneralStuff', () => {
     const cx = new SAXContext();
-    // whitespace
+    // text including whitespace
     cx.state = 'GENERAL_STUFF';
+    cx.newElement('a');
+    handler.handleGeneralStuff(cx, 'a');
     handler.handleGeneralStuff(cx, ' ');
+    handler.handleGeneralStuff(cx, 'b');
     assertEquals(cx.state, 'GENERAL_STUFF');
+    assertEquals(cx.memento, 'a b');
     // FOUND_LT
     handler.handleGeneralStuff(cx, '<');
     assertEquals(cx.state, 'FOUND_LT');

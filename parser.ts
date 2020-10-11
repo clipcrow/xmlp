@@ -9,7 +9,7 @@ export class ParserBase implements Locatable {
     private _position: SAXPosition = { line: 1, column: 0 };
 
     /*
-        The basic logic of this sax-parser was obtained by reading the source code of sax-js.
+        The basic logic of this XML parser was obtained by reading the source code of sax-js.
         Thanks & see: https://github.com/isaacs/sax-js
 
         STATE                     XML
@@ -121,20 +121,16 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
             }
             const c = this.readNext();
             const events = handler(this.cx, c);
-            if (events.length > 0) {
-                events.forEach(([event, ...args]) => {
-                    const list = this._listeners[event];
-                    if (list?.length > 0) {
-                        list.forEach((listener) => {
-                            listener.call(this, ...args);
-                        });
-                    }
-                });
+            for (const [event, ...args] of events) {
+                const list = this._listeners[event] || [];
+                for (const listener of list) {
+                    listener.call(this, ...args);
+                }
             }
         }
     }
 
-    write(chunk: Uint8Array, controller: WritableStreamDefaultController) {
+    write(chunk: Uint8Array, controller?: WritableStreamDefaultController) {
         // TextDecoder can resolve BOM.
         this.chunk = new TextDecoder().decode(chunk);
         this._controller = controller;
@@ -168,9 +164,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
             this.chunk = source;
             this.run();
         } else if (source instanceof Uint8Array) {
-            this.write(source, {
-                error: () => {},
-            });
+            this.write(source);
         } else {
             await Deno.copy(source, this.getWriter());
         }

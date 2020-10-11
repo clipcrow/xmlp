@@ -26,9 +26,7 @@ export function handleGeneralStuff(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '<') {
         cx.state = 'FOUND_LT';
     } else {
-        if (!isWhitespace(c)) {
-            cx.appendMemento(c);
-        }
+        cx.appendMemento(c);
     }
     return [];
 }
@@ -50,7 +48,7 @@ function resolveEntity(text: string): string {
 // FOUND_LT; SGML_DECL, START_TAG, END_TAG, PROC_INST, Error
 export function handleFoundLT(cx: SAXContext, c: string): SAXEvent[] {
     let events: SAXEvent[] = [];
-    const text = resolveEntity(cx.memento);
+    const text = resolveEntity(cx.memento).trim();
     cx.clearMemento();
     if (text) {
         events = [['text', text, new ElementInfo(cx.peekElement()!), false]];
@@ -215,15 +213,15 @@ export function handleDoctype(cx: SAXContext, c: string): SAXEvent[] {
 function emitStartElement(cx: SAXContext): SAXEvent[] {
     const events: SAXEvent[] = [];
     const element = cx.peekElement()!;
-    element.prefixMappings.forEach(({ ns, uri}) => {
+    for (const { ns, uri } of element.prefixMappings) {
         cx.registerNamespace(ns, uri);
         events.push(['start_prefix_mapping', ns, uri]);
-    })
+    }
     // Setting Namespace URI to this element and all attributes.
     element.uri = cx.getNamespaceURI(element.prefix);
-    element.attributes.forEach((attribute) => {
+    for (const attribute of element.attributes) {
         attribute.uri = cx.getNamespaceURI(attribute.prefix);
-    });
+    }
     events.push(['start_element', new ElementInfo(element)]);
     return events;
 }
@@ -277,9 +275,9 @@ function emitEndElement(cx: SAXContext, qName: string): SAXEvent[] {
         throw new SAXError(`Illegal element structure, ${element.qName} & ${qName}`, cx);
     }
     events = [['end_element', new ElementInfo(element)]];
-    element.prefixMappings.forEach((mapping) => {
-        events.push(['end_prefix_mapping', mapping.ns, mapping.uri]);
-    })
+    for(const { ns, uri } of element.prefixMappings) {
+        events.push(['end_prefix_mapping', ns, uri]);
+    }
     return events;
 }
 

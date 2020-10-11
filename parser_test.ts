@@ -84,4 +84,10 @@ Deno.test('PullParser', async () => {
     const events = parser.parse(file);
     assertEquals(events.next().value, ['start_document']);
     assertEquals(events.next().value, ['processing_instruction', 'xml version="1.0" encoding="utf-8"']);
+    while(true) {
+        const { done } = events.next();
+        if (done) {
+            break;
+        }
+    }
 });
