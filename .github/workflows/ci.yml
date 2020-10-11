@@ -14,19 +14,19 @@ jobs:
       fail-fast: false
 
     steps:
-      - name: Setup repo
+      - name: Set up repository
         uses: actions/checkout@v2
-      - name: Setup Deno
+      - name: Set up Deno
         uses: denolib/setup-deno@v2
         with:
           deno-version: v1.4.4
-      - name: Run Tests
+      - name: Perform Deno test
         run: |
           deno --version
           deno test -A
-      - name: Setup CodeQL
+      - name: Set up CodeQL
         uses: github/codeql-action/init@v1
         with:
           languages: typescript
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v1
