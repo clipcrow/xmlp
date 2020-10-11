@@ -1,4 +1,4 @@
-import { assertEquals } from 'https://deno.land/std@0.73.0/testing/asserts.ts';
+import { assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
 import { ParserBase, SAXParser } from './parser.ts';
 
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {

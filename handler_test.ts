@@ -1,5 +1,5 @@
-import { assertEquals, assertThrows } from 'https://deno.land/std@0.73.0/testing/asserts.ts';
-import { ElementInfo, SAXContext } from './context.ts';
+import { assertEquals, assertThrows } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
+import { SAXContext } from './context.ts';
 import * as handler from './handler.ts';
 
 Deno.test('handleBeforeDocument', () => {

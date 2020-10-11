@@ -1,13 +1,13 @@
-# SAX Parser for Deno
+# XML Parser for Deno
 
 [![ci](https://github.com/m-kur/saxp/workflows/ci/badge.svg)](https://github.com/m-kur/saxp/actions)
 
-The basic logic of this sax-parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
+The basic logic of this XML parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
 
 ## Usage
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/saxp@v0.1/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/saxp@v0.2/mod.ts';
 
 const parser = new SAXParser();
 parser.on('start_prefix_mapping', (ns, uri) => {

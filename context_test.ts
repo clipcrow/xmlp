@@ -1,4 +1,4 @@
-import { assertEquals } from 'https://deno.land/std@0.73.0/testing/asserts.ts';
+import { assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
 import { Attribute, AttributeInfo, Element, ElementInfo, SAXContext } from './context.ts';
 
 Deno.test('Attribute xmlns', () => {
