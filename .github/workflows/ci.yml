@@ -1,5 +1,5 @@
 # https://github.com/denolib/setup-deno
-name: Deno
+name: CI
 
 on:
   push:
@@ -8,8 +8,10 @@ on:
     branches: [master]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
 
     steps:
       - name: Setup repo
@@ -22,3 +24,9 @@ jobs:
         run: |
           deno --version
           deno test -A
+      - name: Setup CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: typescript
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
