@@ -53,7 +53,7 @@ export function handleFoundLT(cx: SAXContext, c: string): SAXEvent[] {
     const text = resolveEntity(cx.memento);
     cx.clearMemento();
     if (text) {
-        events = [['text', text, false, new ElementInfo(cx.peekElement()!)]];
+        events = [['text', text, new ElementInfo(cx.peekElement()!), false]];
     }
     if (!isWhitespace(c)) {
         if (c === '?') {
@@ -148,7 +148,7 @@ export function handleCdataEnding2(cx: SAXContext, c: string): SAXEvent[] {
     let events: SAXEvent[] = [];
     if (c === '>') {
         if (cx.memento) {
-            events = [['text', cx.memento, true, new ElementInfo(cx.peekElement()!)]];
+            events = [['text', cx.memento, new ElementInfo(cx.peekElement()!), true]];
             cx.clearMemento();
         }
         cx.state = 'GENERAL_STUFF';
@@ -213,7 +213,7 @@ export function handleDoctype(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 function emitStartElement(cx: SAXContext): SAXEvent[] {
-    let events: SAXEvent[] = [];
+    const events: SAXEvent[] = [];
     const element = cx.peekElement()!;
     element.prefixMappings.forEach(({ ns, uri}) => {
         cx.registerNamespace(ns, uri);

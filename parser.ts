@@ -125,14 +125,16 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
                 }
                 const c = this.readNext();
                 const events = handler(this.cx, c);
-                events.forEach(([event, args]) => {
-                    const list = this._listeners[event];
-                    if (list) {
-                        list.forEach((listener) => {
-                            listener.call(this, ...args);
-                        });
-                    }
-                })
+                if (events.length > 0) {
+                    events.forEach(([event, ...args]) => {
+                        const list = this._listeners[event];
+                        if (list?.length > 0) {
+                            list.forEach((listener) => {
+                                listener.call(this, ...args);
+                            });
+                        }
+                    });
+                }
             }
         } catch(e) {
             this._controller?.error(e);
@@ -163,7 +165,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     on(event: 'processing_instruction', listener: (procInst: string) => void): this;
     on(event: 'start_prefix_mapping', listener: (ns: string, uri: string) => void): this;
     on(event: 'start_element', listener: (element: ElementInfo) => void): this;
-    on(event: 'text', listener: (text: string, cdata: boolean, element: ElementInfo) => void): this;
+    on(event: 'text', listener: (text: string, element: ElementInfo, cdata: boolean) => void): this;
     on(event: 'comment', listener: (comment: string) => void): this;
     on(event: 'end_element', listener: (element: ElementInfo) => void): this;
     on(event: 'end_prefix_mapping', listener: (ns: string, uri: string) => void): this;

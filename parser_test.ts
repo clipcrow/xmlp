@@ -1,4 +1,4 @@
-import { assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
+import { assert, assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
 import { ParserBase, SAXParser } from './parser.ts';
 
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
@@ -30,12 +30,28 @@ Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
 
 Deno.test('sax parse', async () => {
     const parser = new SAXParser();
+    let assertionCount = 0;
+    let elementCount = 0;
     parser.on('start_prefix_mapping', (ns, uri) => {
-        console.log(`mapping start ${ns}: ${uri}`);
-    }).on('end_prefix_mapping', (ns, uri) => {
-        console.log(`mapping end ${ns}: ${uri}`);
+        assertionCount += 1;
+        if (ns === 'atom') {
+            assertEquals(uri, 'http://www.w3.org/2005/Atom');
+        } else if (ns === 'm') {
+            assertEquals(uri, 'https://saxp.test/m');
+        } else {
+            assert(false);
+        }
+    }).on('start_element', (element) => {
+        elementCount += 1;
+        if (element.qName === 'guid') {
+            assertionCount += 1;
+            assertEquals(element.attributes[0].qName, 'isPermaLink');
+            assertEquals(element.attributes[0].value, 'false');
+        }
     });
     const file = await Deno.open('parser_test.xml');
     await Deno.copy(file, parser.getWriter());
     file.close();
+    assertEquals(assertionCount, 3);
+    assertEquals(elementCount, 18);
 });

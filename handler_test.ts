@@ -36,11 +36,11 @@ Deno.test('handleFoundLT', () => {
     cx.state = 'FOUND_LT';
     cx.appendMemento('test');
     cx.newElement('a');
-    const [[event, text, cdata, element]] = handler.handleFoundLT(cx, '!');
+    const [[event, text, element, cdata]] = handler.handleFoundLT(cx, '!');
     assertEquals(event, 'text');
     assertEquals(text, 'test');
-    assertEquals(cdata, false);
     assertEquals(element.qName, 'a');
+    assertEquals(cdata, false);
     assertEquals(cx.state, 'SGML_DECL');
     // START_TAG'
     cx.state = 'FOUND_LT';
@@ -141,11 +141,11 @@ Deno.test('handleCdataEnding2', () => {
     cx.state = 'CDATA_ENDING_2';
     cx.appendMemento('test');
     cx.newElement('a');
-    const [[event, text, cdata, element]] = handler.handleCdataEnding2(cx, '>');
+    const [[event, text, element, cdata]] = handler.handleCdataEnding2(cx, '>');
     assertEquals(event, 'text');
     assertEquals(text, 'test');
-    assertEquals(cdata, true);
     assertEquals(element.qName, 'a');
+    assertEquals(cdata, true);
     assertEquals(cx.state, 'GENERAL_STUFF');
     // stay
     cx.state = 'CDATA_ENDING_2';
