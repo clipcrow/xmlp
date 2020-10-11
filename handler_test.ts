@@ -2,21 +2,17 @@ import { assertEquals, assertThrows } from 'https://deno.land/std@0.73.0/testing
 import { ElementInfo, SAXContext } from './context.ts';
 import * as handler from './handler.ts';
 
-const DUMMY = {
-    emit: () => {},
-};
-
 Deno.test('handleBeforeDocument', () => {
     // whitespace
     const cx = new SAXContext();
-    handler.handleBeforeDocument(cx, ' ', DUMMY);
+    handler.handleBeforeDocument(cx, ' ');
     assertEquals(cx.state, 'BEFORE_DOCUMENT');
     // FOUND_LT
-    handler.handleBeforeDocument(cx, '<', DUMMY);
+    handler.handleBeforeDocument(cx, '<');
     assertEquals(cx.state, 'FOUND_LT');
     // Error
     cx.state = 'BEFORE_DOCUMENT';
-    assertThrows(() => handler.handleBeforeDocument(cx, 's', DUMMY));
+    assertThrows(() => handler.handleBeforeDocument(cx, 's'));
 });
 
 Deno.test('handleGeneralStuff', () => {
@@ -34,36 +30,30 @@ Deno.test('handleFoundLT', () => {
     const cx = new SAXContext();
     // PROC_INST
     cx.state = 'FOUND_LT';
-    handler.handleFoundLT(cx, '?', DUMMY);
+    handler.handleFoundLT(cx, '?');
     assertEquals(cx.state, 'PROC_INST');
     // text event & SGML_DECL
     cx.state = 'FOUND_LT';
     cx.appendMemento('test');
     cx.newElement('a');
-    let flag = false;
-    handler.handleFoundLT(cx, '!', {
-        emit: (event, text: string, cdata: boolean, element: ElementInfo) => {
-            flag = true;
-            assertEquals(event, 'text');
-            assertEquals(text, 'test');
-            assertEquals(cdata, false);
-            assertEquals(element.qName, 'a');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, text, cdata, element]] = handler.handleFoundLT(cx, '!');
+    assertEquals(event, 'text');
+    assertEquals(text, 'test');
+    assertEquals(cdata, false);
+    assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'SGML_DECL');
     // START_TAG'
     cx.state = 'FOUND_LT';
-    handler.handleFoundLT(cx, 'a', DUMMY);
+    handler.handleFoundLT(cx, 'a');
     assertEquals(cx.state, 'START_TAG');
     assertEquals(cx.memento, 'a');
     // END_TAG
     cx.state = 'FOUND_LT';
-    handler.handleFoundLT(cx, '/', DUMMY);
+    handler.handleFoundLT(cx, '/');
     assertEquals(cx.state, 'END_TAG');
     // Error'
     cx.state = 'FOUND_LT';
-    assertThrows(() => handler.handleFoundLT(cx, '-', DUMMY));
+    assertThrows(() => handler.handleFoundLT(cx, '-'));
 });
 
 Deno.test('handleProcInst', () => {
@@ -79,20 +69,14 @@ Deno.test('handleProcInstEnding', () => {
     // processing_instruction & GENERAL_STUFF
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
-    let flag = false;
-    handler.handleProcInstEnding(cx, '>', {
-        emit: (event, procInst) => {
-            flag = true;
-            assertEquals(event, 'processing_instruction');
-            assertEquals(procInst, 'test');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, procInst]] = handler.handleProcInstEnding(cx, '>');
+    assertEquals(event, 'processing_instruction');
+    assertEquals(procInst, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // stay
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
-    handler.handleProcInstEnding(cx, 'a', DUMMY);
+    handler.handleProcInstEnding(cx, 'a');
     assertEquals(cx.memento, 'test?a');
 });
 
@@ -101,38 +85,32 @@ Deno.test('handleSgmlDecl', () => {
     // CDATA
     cx.state = 'SGML_DECL';
     cx.appendMemento('[CDATA');
-    handler.handleSgmlDecl(cx, '[', DUMMY);
+    handler.handleSgmlDecl(cx, '[');
     assertEquals(cx.state, 'CDATA');
     assertEquals(cx.memento, '');
     // COMMENT
     cx.state = 'SGML_DECL';
     cx.appendMemento('-');
-    handler.handleSgmlDecl(cx, '-', DUMMY);
+    handler.handleSgmlDecl(cx, '-');
     assertEquals(cx.state, 'COMMENT');
     // DOCTYPE
     cx.state = 'SGML_DECL';
     cx.appendMemento('DOCTYP');
-    handler.handleSgmlDecl(cx, 'E', DUMMY);
+    handler.handleSgmlDecl(cx, 'E');
     assertEquals(cx.state, 'DOCTYPE');
     // sgml_declaration & GENERAL_STUFF
     cx.state = 'SGML_DECL';
     cx.appendMemento('test');
-    let flag = false;
-    handler.handleSgmlDecl(cx, '>', {
-        emit: (event, sgml: string) => {
-            flag = true;
-            assertEquals(event, 'sgml_declaration');
-            assertEquals(sgml, 'test');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, sgml]] = handler.handleSgmlDecl(cx, '>');
+    assertEquals(event, 'sgml_declaration');
+    assertEquals(sgml, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     assertEquals(cx.memento, '');
     // Error
     cx.state = 'SGML_DECL';
     cx.appendMemento('DOCTYP');
     cx.newElement('a');
-    assertThrows(() => handler.handleSgmlDecl(cx, 'E', DUMMY));
+    assertThrows(() => handler.handleSgmlDecl(cx, 'E'));
 });
 
 Deno.test('handleCdata', () => {
@@ -163,26 +141,20 @@ Deno.test('handleCdataEnding2', () => {
     cx.state = 'CDATA_ENDING_2';
     cx.appendMemento('test');
     cx.newElement('a');
-    let flag = false;
-    handler.handleCdataEnding2(cx, '>', {
-        emit: (event, comment: string, cdata: boolean, element: ElementInfo) => {
-            flag = true;
-            assertEquals(event, 'text');
-            assertEquals(comment, 'test');
-            assertEquals(cdata, true);
-            assertEquals(element.qName, 'a');
-        },
-    });
+    const [[event, text, cdata, element]] = handler.handleCdataEnding2(cx, '>');
+    assertEquals(event, 'text');
+    assertEquals(text, 'test');
+    assertEquals(cdata, true);
+    assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
-    assertEquals(flag, true);
     // stay
     cx.state = 'CDATA_ENDING_2';
     cx.appendMemento('test');
-    handler.handleCdataEnding2(cx, ']', DUMMY);
+    handler.handleCdataEnding2(cx, ']');
     assertEquals(cx.memento, 'test]');
     assertEquals(cx.state, 'CDATA_ENDING_2');
     // CDATA
-    handler.handleCdataEnding2(cx, 'a', DUMMY);
+    handler.handleCdataEnding2(cx, 'a');
     assertEquals(cx.memento, 'test]]]a');
     assertEquals(cx.state, 'CDATA');
 });
@@ -214,20 +186,14 @@ Deno.test('handleCommentEnding2', () => {
     // comment & GENERAL_STUFF
     cx.state = 'COMMENT_ENDING_2';
     cx.appendMemento('test');
-    let flag = false;
-    handler.handleCommentEnding2(cx, '>', {
-        emit: (event, comment: string) => {
-            flag = true;
-            assertEquals(event, 'comment');
-            assertEquals(comment, 'test');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, comment]] = handler.handleCommentEnding2(cx, '>');
+    assertEquals(event, 'comment');
+    assertEquals(comment, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // COMMENT
     cx.state = 'COMMENT_ENDING_2';
     cx.appendMemento('test');
-    handler.handleCommentEnding2(cx, 'a', DUMMY);
+    handler.handleCommentEnding2(cx, 'a');
     assertEquals(cx.state, 'COMMENT');
     assertEquals(cx.memento, 'test--a');
 });
@@ -237,16 +203,10 @@ Deno.test('handleDoctype', () => {
     // doctype & GENERAL_STUFF
     cx.state = 'DOCTYPE';
     cx.appendMemento('tes');
-    handler.handleDoctype(cx, 't', DUMMY);
-    let flag = false;
-    handler.handleDoctype(cx, '>', {
-        emit: (event, doctype: string) => {
-            flag = true;
-            assertEquals(event, 'doctype');
-            assertEquals(doctype, 'test');
-        },
-    });
-    assertEquals(flag, true);
+    handler.handleDoctype(cx, 't');
+    const [[event, doctype]] = handler.handleDoctype(cx, '>');
+    assertEquals(event, 'doctype');
+    assertEquals(doctype, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
 });
 
@@ -255,27 +215,21 @@ Deno.test('handleStartTag', () => {
     // start_element & GENERAL_STUFF
     cx.state = 'START_TAG';
     cx.appendMemento('a');
-    let flag = false;
-    handler.handleStartTag(cx, '>', {
-        emit: (event, element: ElementInfo) => {
-            flag = true;
-            assertEquals(event, 'start_element');
-            assertEquals(element.qName, 'a');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, element]] = handler.handleStartTag(cx, '>');
+    assertEquals(event, 'start_element');
+    assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // EMPTY_ELEMENT_TAG
     cx.state = 'START_TAG';
-    handler.handleStartTag(cx, '/', DUMMY);
+    handler.handleStartTag(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // START_TAG_STUFF
     cx.state = 'START_TAG';
-    handler.handleStartTag(cx, ' ', DUMMY);
+    handler.handleStartTag(cx, ' ');
     assertEquals(cx.state, 'START_TAG_STUFF');
     // Error
     cx.state = 'START_TAG';
-    assertThrows(() => handler.handleStartTag(cx, '?', DUMMY));
+    assertThrows(() => handler.handleStartTag(cx, '?'));
 });
 
 Deno.test('handleStartTagStuff', () => {
@@ -283,28 +237,22 @@ Deno.test('handleStartTagStuff', () => {
     // start_element & GENERAL_STUFF
     cx.state = 'START_TAG_STUFF';
     cx.newElement('a');
-    let flag = false;
-    handler.handleStartTagStuff(cx, '>', {
-        emit: (event, element: ElementInfo) => {
-            flag = true;
-            assertEquals(event, 'start_element');
-            assertEquals(element.qName, 'a');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, element]] = handler.handleStartTagStuff(cx, '>');
+    assertEquals(event, 'start_element');
+    assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // EMPTY_ELEMENT_TAG
     cx.state = 'START_TAG_STUFF';
-    handler.handleStartTagStuff(cx, '/', DUMMY);
+    handler.handleStartTagStuff(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // ATTRIBUTE_NAME
     cx.state = 'START_TAG_STUFF';
-    handler.handleStartTagStuff(cx, 'a', DUMMY);
+    handler.handleStartTagStuff(cx, 'a');
     assertEquals(cx.state, 'ATTRIBUTE_NAME');
     assertEquals(cx.memento, 'a');
     // Error
     cx.state = 'START_TAG_STUFF';
-    assertThrows(() => handler.handleStartTagStuff(cx, '?', DUMMY));
+    assertThrows(() => handler.handleStartTagStuff(cx, '?'));
 });
 
 Deno.test('handleEmptyElementTag', () => {
@@ -312,23 +260,15 @@ Deno.test('handleEmptyElementTag', () => {
     // start_element & end_element & GENERAL_STUFF
     cx.state = 'EMPTY_ELEMENT_TAG';
     cx.newElement('test');
-    let count = 0;
-    let events = '';
-    let qNames = '';
-    handler.handleEmptyElementTag(cx, '>', {
-        emit: (event, element: ElementInfo) => {
-            count += 1;
-            events += event;
-            qNames +=  element.qName;
-        },
-    });
-    assertEquals(count, 2);
-    assertEquals(events, 'start_elementend_element');
-    assertEquals(qNames, 'testtest');
+    const [[event0, element0], [event1, element1]] = handler.handleEmptyElementTag(cx, '>');
+    assertEquals(event0, 'start_element');
+    assertEquals(element0.qName, 'test');
+    assertEquals(event1, 'end_element');
+    assertEquals(element1.qName, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // Error
     cx.state = 'EMPTY_ELEMENT_TAG';
-    assertThrows(() => handler.handleEmptyElementTag(cx, ' ', DUMMY));
+    assertThrows(() => handler.handleEmptyElementTag(cx, ' '));
 });
 
 Deno.test('handleAttributeName', () => {
@@ -392,28 +332,22 @@ Deno.test('handleAttributeValueEnd', () => {
     const cx = new SAXContext();
     // START_TAG_STUFF
     cx.state = 'ATTRIBUTE_VALUE_END';
-    handler.handleAttributeValueEnd(cx, ' ', DUMMY);
+    handler.handleAttributeValueEnd(cx, ' ');
     assertEquals(cx.state, 'START_TAG_STUFF');
     // EMPTY_ELEMENT_TAG
     cx.state = 'ATTRIBUTE_VALUE_END';
-    handler.handleAttributeValueEnd(cx, '/', DUMMY);
+    handler.handleAttributeValueEnd(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // start_element & GENERAL_STUFF
     cx.state = 'ATTRIBUTE_VALUE_END';
     cx.newElement('a');
-    let flag = false;
-    handler.handleAttributeValueEnd(cx, '>', {
-        emit: (event, element: ElementInfo) => {
-            flag = true;
-            assertEquals(event, 'start_element');
-            assertEquals(element.qName, 'a');
-        },
-    });
-    assertEquals(flag, true);
+    const [[event, element]] = handler.handleAttributeValueEnd(cx, '>');
+    assertEquals(event, 'start_element');
+    assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // Error
     cx.state = 'ATTRIBUTE_VALUE_END';
-    assertThrows(() => handler.handleAttributeValueEnd(cx, 'a', DUMMY));
+    assertThrows(() => handler.handleAttributeValueEnd(cx, 'a'));
 });
 
 Deno.test('handleEndTag', () => {
@@ -423,23 +357,17 @@ Deno.test('handleEndTag', () => {
     cx.newElement('a');
     cx.newElement('test');
     cx.appendMemento('test');
-    let flag = false;
-    handler.handleEndTag(cx, '>', {
-        emit: (event, element: ElementInfo) => {
-            flag = true;
-            assertEquals(event, 'end_element');
-            assertEquals(element.qName, 'test');
-        }
-    })
-    assertEquals(flag, true);
+    const [[event, element]] = handler.handleEndTag(cx, '>');
+    assertEquals(event, 'end_element');
+    assertEquals(element.qName, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // END_TAG_SAW_WHITE
     cx.state = 'END_TAG';
-    handler.handleEndTag(cx, ' ', DUMMY);
+    handler.handleEndTag(cx, ' ');
     assertEquals(cx.state, 'END_TAG_SAW_WHITE');
     // Error
     cx.state = 'END_TAG';
-    assertThrows(() => handler.handleEndTag(cx, '?', DUMMY));
+    assertThrows(() => handler.handleEndTag(cx, '?'));
 });
 
 
@@ -449,17 +377,13 @@ Deno.test('handleEndTagSawWhite', () => {
     cx.state = 'END_TAG_SAW_WHITE';
     cx.newElement('test');
     cx.appendMemento('test');
-    let events = '';
-    handler.handleEndTagSawWhite(cx, '>', {
-        emit: (event) => {
-            events += event;
-        }
-    })
-    assertEquals(events, 'end_elementend_document');
+    const [[event0], [event1]] = handler.handleEndTagSawWhite(cx, '>');
+    assertEquals(event0, 'end_element');
+    assertEquals(event1, 'end_document');
     assertEquals(cx.state, 'AFTER_DOCUMENT');
     // Error
     cx.state = 'END_TAG';
-    assertThrows(() => handler.handleEndTagSawWhite(cx, 'a', DUMMY));
+    assertThrows(() => handler.handleEndTagSawWhite(cx, 'a'));
 });
 
 Deno.test('handleAfterDocument', () => {

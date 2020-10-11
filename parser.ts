@@ -1,4 +1,4 @@
-import { Emittable, Locatable, SAXHandler, SAXContext, SAXPosition, ElementInfo } from './context.ts';
+import { Locatable, SAXHandler, SAXContext, SAXPosition, ElementInfo } from './context.ts';
 import * as handler from './handler.ts';
 
 export class ParserBase implements Locatable {
@@ -124,7 +124,15 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
                     throw new Error(`Handler for ${state} not found`);
                 }
                 const c = this.readNext();
-                handler(this.cx, c, this.emitter);
+                const events = handler(this.cx, c);
+                events.forEach(([event, args]) => {
+                    const list = this._listeners[event];
+                    if (list) {
+                        list.forEach((listener) => {
+                            listener.call(this, ...args);
+                        });
+                    }
+                })
             }
         } catch(e) {
             this._controller?.error(e);
@@ -145,21 +153,6 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
                 await streamWriter.ready;
                 await streamWriter.write(p);
                 return p.length;
-            }
-        };
-    }
-
-    protected get emitter(): Emittable {
-        const listeners = this._listeners;
-        return {
-            // deno-lint-ignore no-explicit-any
-            emit(event: string, ...args: any[]) {
-                const list = listeners[event];
-                if (list) {
-                    list.forEach((listener) => {
-                        listener.call(this, ...args);
-                    });
-                }
             }
         };
     }

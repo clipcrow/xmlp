@@ -1,6 +1,6 @@
 # SAX Parser for Deno
 
-[![ci](https://github.com/m-kur/saxp/workflows/CI/badge.svg)](https://github.com/m-kur/saxp/actions)
+[![ci](https://github.com/m-kur/saxp/workflows/ci/badge.svg)](https://github.com/m-kur/saxp/actions)
 
 The basic logic of this sax-parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
 

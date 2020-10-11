@@ -1,4 +1,4 @@
-class QName {
+export class QName {
     private _qName: string;
     protected _prefix: string;
     protected _localPart: string;
@@ -199,13 +199,11 @@ export class SAXContext {
     }
 }
 
-export interface Emittable {
-    // deno-lint-ignore no-explicit-any
-    emit(event: string, ...args: any[]): void;
-}
+// deno-lint-ignore no-explicit-any
+export type SAXEvent = [string, ...any[]];
 
 export interface SAXHandler {
-    (cx: SAXContext, c: string, emitter: Emittable): void;
+    (cx: SAXContext, c: string): SAXEvent[];
 }
 
 export class SAXError extends Error {

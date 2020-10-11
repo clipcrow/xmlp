@@ -1,4 +1,4 @@
-import { Emittable, SAXContext, SAXError, ElementInfo } from './context.ts';
+import { SAXContext, SAXEvent, SAXError, ElementInfo } from './context.ts';
 
 const NAME_HEAD = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
 const NAME_BODY = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
@@ -8,19 +8,21 @@ function isWhitespace(c: string): boolean {
 }
 
 // BEFORE_DOCUMENT; FOUND_LT, Error
-export function handleBeforeDocument(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleBeforeDocument(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c === '<') {
-        emitter.emit('start_document');
+        events = [['start_document']];
         cx.state = 'FOUND_LT';
     } else {
         if (!isWhitespace(c)) {
             throw new SAXError('Non-whitespace before document.', cx);
         }
     }
+    return events;
 }
 
 // GENERAL_STUFF; FOUND_LT
-export function handleGeneralStuff(cx: SAXContext, c: string) {
+export function handleGeneralStuff(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '<') {
         cx.state = 'FOUND_LT';
     } else {
@@ -28,6 +30,7 @@ export function handleGeneralStuff(cx: SAXContext, c: string) {
             cx.appendMemento(c);
         }
     }
+    return [];
 }
 
 function resolveEntity(text: string): string {
@@ -45,11 +48,12 @@ function resolveEntity(text: string): string {
 }
 
 // FOUND_LT; SGML_DECL, START_TAG, END_TAG, PROC_INST, Error
-export function handleFoundLT(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleFoundLT(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     const text = resolveEntity(cx.memento);
     cx.clearMemento();
     if (text) {
-        emitter.emit('text', text, false, new ElementInfo(cx.peekElement()!));
+        events = [['text', text, false, new ElementInfo(cx.peekElement()!)]];
     }
     if (!isWhitespace(c)) {
         if (c === '?') {
@@ -65,31 +69,36 @@ export function handleFoundLT(cx: SAXContext, c: string, emitter: Emittable) {
             throw new SAXError('Unencoded <', cx);
         }
     }
+    return events;
 }
 
 // PROC_INST; PROC_INST_ENDING
-export function handleProcInst(cx: SAXContext, c: string) {
+export function handleProcInst(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '?') {
         cx.state = 'PROC_INST_ENDING';
     } else {
         cx.appendMemento(c);
     }
+    return [];
 }
 
 // PROC_INST_ENDING; processing_instruction & GENERAL_STUFF, PROC_INST
-export function handleProcInstEnding(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleProcInstEnding(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c === '>') {
-        emitter.emit('processing_instruction', cx.memento);
+        events = [['processing_instruction', cx.memento]];
         cx.clearMemento();
         cx.state = 'GENERAL_STUFF';
     } else {
         cx.appendMemento(`?${c}`);
         cx.state = 'PROC_INST';
     }
+    return events;
 }
 
 // SGML_DECL; CDATA, COMMENT, DOCTYPE, GENERAL_STUFF, Error
-export function handleSgmlDecl(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleSgmlDecl(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     const sgmlCmd = `${cx.memento}${c}`.toUpperCase();
     if (sgmlCmd === '[CDATA[') {
         cx.clearMemento();
@@ -104,38 +113,42 @@ export function handleSgmlDecl(cx: SAXContext, c: string, emitter: Emittable) {
         cx.clearMemento();
         cx.state = 'DOCTYPE';
     } else if (c === '>') {
-        emitter.emit('sgml_declaration', cx.memento);
+        events = [['sgml_declaration', cx.memento]];
         cx.clearMemento();
         cx.state = 'GENERAL_STUFF';
     } else {
         cx.appendMemento(c);
     }
+    return events;
 }
 
 // CDATA; CDATA_ENDING
-export function handleCdata(cx: SAXContext, c: string) {
+export function handleCdata(cx: SAXContext, c: string): SAXEvent[] {
     if (c === ']') {
         cx.state = 'CDATA_ENDING';
     } else {
         cx.appendMemento(c);
     }
+    return [];
 }
 
 // CDATA_ENDING; CDATA_ENDING_2, CDATA
-export function handleCdataEnding(cx: SAXContext, c: string) {
+export function handleCdataEnding(cx: SAXContext, c: string): SAXEvent[] {
     if (c === ']') {
         cx.state = 'CDATA_ENDING_2';
     } else {
         cx.appendMemento(`]${c}`);
         cx.state = 'CDATA';
     }
+    return [];
 }
 
 // CDATA_ENDING_2; text & GENERAL_STUFF, CDATA
-export function handleCdataEnding2(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleCdataEnding2(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c === '>') {
         if (cx.memento) {
-            emitter.emit('text', cx.memento, true, new ElementInfo(cx.peekElement()!));
+            events = [['text', cx.memento, true, new ElementInfo(cx.peekElement()!)]];
             cx.clearMemento();
         }
         cx.state = 'GENERAL_STUFF';
@@ -145,33 +158,37 @@ export function handleCdataEnding2(cx: SAXContext, c: string, emitter: Emittable
         cx.appendMemento(`]]${c}`);
         cx.state = 'CDATA';
     }
+    return events;
 }
 
 // COMMENT; COMMENT_ENDING
-export function handleComment(cx: SAXContext, c: string) {
+export function handleComment(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '-') {
         cx.state = 'COMMENT_ENDING';
     } else {
         cx.appendMemento(c);
     }
+    return [];
 }
 
 // COMMENT_ENDING; COMMENT_ENDING2, COMMENT
-export function handleCommentEnding(cx: SAXContext, c: string) {
+export function handleCommentEnding(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '-') {
         cx.state = 'COMMENT_ENDING_2';
     } else {
         cx.appendMemento(`-${c}`);
         cx.state = 'COMMENT';
     }
+    return [];
 }
 
 // COMMENT_ENDING_2; comment & GENERAL_STUFF, COMMENT
-export function handleCommentEnding2(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleCommentEnding2(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c === '>') {
         const comment = cx.memento;
         if (comment) {
-            emitter.emit('comment', comment);
+            events = [['comment', comment]];
         }
         cx.clearMemento();
         cx.state = 'GENERAL_STUFF';
@@ -179,42 +196,48 @@ export function handleCommentEnding2(cx: SAXContext, c: string, emitter: Emittab
         cx.appendMemento(`--${c}`);
         cx.state = 'COMMENT';
     }
+    return events;
 }
 
 // DOCTYPE; doctype & GENERAL_STUFF
-export function handleDoctype(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleDoctype(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c === '>') {
-        emitter.emit('doctype', cx.memento);
+        events = [['doctype', cx.memento]];
         cx.clearMemento();
         cx.state = 'GENERAL_STUFF';
     } else {
         cx.appendMemento(c);
     }
+    return events;
 }
 
-function emitStartElement(emitter: Emittable, cx: SAXContext) {
+function emitStartElement(cx: SAXContext): SAXEvent[] {
+    let events: SAXEvent[] = [];
     const element = cx.peekElement()!;
     element.prefixMappings.forEach(({ ns, uri}) => {
         cx.registerNamespace(ns, uri);
-        emitter.emit('start_prefix_mapping', ns, uri);
+        events.push(['start_prefix_mapping', ns, uri]);
     })
     // Setting Namespace URI to this element and all attributes.
     element.uri = cx.getNamespaceURI(element.prefix);
     element.attributes.forEach((attribute) => {
         attribute.uri = cx.getNamespaceURI(attribute.prefix);
     });
-    emitter.emit('start_element', new ElementInfo(element));
+    events.push(['start_element', new ElementInfo(element)]);
+    return events;
 }
 
 // START_TAG; start_element & GENERAL_STUFF, EMPTY_ELEMENT_TAG, START_TAG_STUFF, Error
-export function handleStartTag(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleStartTag(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (NAME_BODY.test(c)) {
         cx.appendMemento(c);
     } else {
         cx.newElement(cx.memento);
         cx.clearMemento();
         if (c === '>') {
-            emitStartElement(emitter, cx);
+            events = emitStartElement(cx);
             cx.state = 'GENERAL_STUFF';
         } else if (c === '/') {
             cx.state = 'EMPTY_ELEMENT_TAG';
@@ -225,13 +248,15 @@ export function handleStartTag(cx: SAXContext, c: string, emitter: Emittable) {
             cx.state = 'START_TAG_STUFF';
         }
     }
+    return events;
 }
 
 // ELEMENT_STUFF; start_element & GENERAL_STUFF, EMPTY_ELEMENT_TAG, ATTRIBUTE_NAME, Error
-export function handleStartTagStuff(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleStartTagStuff(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (!isWhitespace(c)) {
         if (c === '>') {
-            emitStartElement(emitter, cx);
+            events = emitStartElement(cx);
             cx.state = 'GENERAL_STUFF';
         } else if (c === '/') {
             cx.state = 'EMPTY_ELEMENT_TAG';
@@ -242,29 +267,33 @@ export function handleStartTagStuff(cx: SAXContext, c: string, emitter: Emittabl
             throw new SAXError('Invalid attribute name', cx);
         }
     }
+    return events;
 }
 
-function emitEndElement(emitter: Emittable, cx: SAXContext, qName: string) {
+function emitEndElement(cx: SAXContext, qName: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     const element = cx.popElement()!;
     if (element.qName !== qName) {
         throw new SAXError(`Illegal element structure, ${element.qName} & ${qName}`, cx);
     }
-    emitter.emit('end_element', new ElementInfo(element));
+    events = [['end_element', new ElementInfo(element)]];
     element.prefixMappings.forEach((mapping) => {
-        emitter.emit('end_prefix_mapping', mapping.ns, mapping.uri);
+        events.push(['end_prefix_mapping', mapping.ns, mapping.uri]);
     })
+    return events;
 }
 
 // EMPTY_ELEMENT_TAG; start_element & end_element & GENERAL_STUFF, Error
-export function handleEmptyElementTag(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleEmptyElementTag(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c !== '>') {
         throw new SAXError('Forward-slash in start-tag not followed by &gt', cx);
     }
     const element = cx.peekElement()!;
     element.standAlone = true;
-    emitStartElement(emitter, cx);
-    emitEndElement(emitter, cx, element.qName);
+    events = emitStartElement(cx).concat(emitEndElement(cx, element.qName));
     cx.state = 'GENERAL_STUFF';
+    return events;
 }
 
 function newAttribute(cx: SAXContext) {
@@ -275,7 +304,7 @@ function newAttribute(cx: SAXContext) {
 }
 
 // ATTRIBUTE_NAME; ATTRIBUTE_EQUAL, ATTRIBUTE_NAME_SAW_WHITE, Error
-export function handleAttributeName(cx: SAXContext, c: string) {
+export function handleAttributeName(cx: SAXContext, c: string): SAXEvent[] {
     if (NAME_BODY.test(c)) {
         cx.appendMemento(c);
     } else if (isWhitespace(c)) {
@@ -285,19 +314,21 @@ export function handleAttributeName(cx: SAXContext, c: string) {
     } else {
         throw new SAXError(c === '>' ? 'Attribute without value' : 'Invalid attribute name', cx);
     }
+    return [];
 }
 
 // ATTRIBUTE_NAME_SAW_WHITE; ATTRIBUTE_EQUAL, Error
-export function handleAttributeNameSawWhite(cx: SAXContext, c: string) {
+export function handleAttributeNameSawWhite(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '=') {
         newAttribute(cx);
     } else if (!isWhitespace(c)) {
         throw new SAXError('Attribute without value', cx);
     }
+    return [];
 }
 
 // ATTRIBUTE_EQUAL; ATTRIBUTE_VALUE_START, Error
-export function handleAttributeEqual(cx: SAXContext, c: string) {
+export function handleAttributeEqual(cx: SAXContext, c: string): SAXEvent[] {
     // skip whitespace
     if (!isWhitespace(c)) {
         if (c === '"' || c === '\'') {
@@ -307,10 +338,11 @@ export function handleAttributeEqual(cx: SAXContext, c: string) {
             throw new SAXError('Unquoted attribute value', cx);
         }
     }
+    return [];
 }
 
 // ATTRIBUTE_VALUE_START; ATTRIBUTE_VALUE_END
-export function handleAttributeValueStart(cx: SAXContext, c: string) {
+export function handleAttributeValueStart(cx: SAXContext, c: string): SAXEvent[] {
     if (c === cx.quote) {
         const value = cx.memento;
         cx.clearMemento();
@@ -320,58 +352,67 @@ export function handleAttributeValueStart(cx: SAXContext, c: string) {
     } else {
         cx.appendMemento(c);
     }
+    return [];
 }
 
 // ATTRIBUTE_VALUE_END; START_TAG_STUFF, EMPTY_ELEMENT_TAG, start_element & GENERAL_STUFF, Error
-export function handleAttributeValueEnd(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleAttributeValueEnd(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (isWhitespace(c)) {
         cx.state = 'START_TAG_STUFF';
     } else if (c === '/') {
         cx.state = 'EMPTY_ELEMENT_TAG';
     } else if (c === '>') {
-        emitStartElement(emitter, cx);
+        events = emitStartElement(cx);
         cx.state = 'GENERAL_STUFF';
     } else {
         throw new SAXError('Invalid attribute name', cx);
     }
+    return events;
 }
 
-function closeElement(cx: SAXContext, emitter: Emittable) {
-    emitEndElement(emitter, cx, cx.memento);
+function closeElement(cx: SAXContext): SAXEvent[] {
+    const events = emitEndElement(cx, cx.memento);
     cx.clearMemento();
     if (cx.elementLength === 0) {
-        emitter.emit('end_document');
+        events.push(['end_document']);
         cx.state = 'AFTER_DOCUMENT';
     } else {
         cx.state = 'GENERAL_STUFF';
     }
+    return events;
 }
 
 // END_TAG; END_TAG_SAW_WHITE, AFTER_DOCUMENT, GENERAL_STUFF, Error
-export function handleEndTag(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleEndTag(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (NAME_BODY.test(c)) {
         cx.appendMemento(c);
     } else if (c === '>') {
-        closeElement(cx, emitter);
+        events = closeElement(cx);
     } else if (isWhitespace(c)) {
         cx.state = 'END_TAG_SAW_WHITE';
     } else {
         throw new SAXError('Invalid element name', cx);
     }
+    return events;
 }
 
 // END_TAG_SAW_WHITE; GENERAL_STUFF, AFTER_DOCUMENT, Error
-export function handleEndTagSawWhite(cx: SAXContext, c: string, emitter: Emittable) {
+export function handleEndTagSawWhite(cx: SAXContext, c: string): SAXEvent[] {
+    let events: SAXEvent[] = [];
     if (c === '>') {
-        closeElement(cx, emitter);
+        events = closeElement(cx);
     } else if (!isWhitespace(c)) {
         throw new SAXError('Invalid characters in end-tag', cx);
     }
+    return events;
 }
 
 // AFTER_DOCUMENT; Error
-export function handleAfterDocument(cx: SAXContext, c: string) {
+export function handleAfterDocument(cx: SAXContext, c: string): SAXEvent[] {
     if (!isWhitespace(c)) {
         throw new SAXError('Non-whitespace after document.', cx);
     }
+    return [];
 }
