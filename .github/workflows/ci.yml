@@ -1,11 +1,7 @@
 # https://github.com/denolib/setup-deno
-name: CI
+name: ci
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+on: [push, pull_request]
 
 jobs:
   ci:
