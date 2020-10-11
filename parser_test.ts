@@ -1,10 +1,10 @@
 import { assertEquals } from 'https://deno.land/std@0.73.0/testing/asserts.ts';
-import { SAXParser } from './mod.ts';
+import { ParserBase, SAXParser } from './parser.ts';
 
-Deno.test('SAXParser chunk & hasNext & readNext & position', () => {
+Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     // protected -> public visiblity
-    class TestParser extends SAXParser {
-        set chunk(chunk: Uint8Array) {
+    class TestParser extends ParserBase {
+        set chunk(chunk: string) {
             super.chunk = chunk;
         }
 
@@ -17,7 +17,7 @@ Deno.test('SAXParser chunk & hasNext & readNext & position', () => {
         }
     }
     const parser = new TestParser();
-    parser.chunk = new TextEncoder().encode('a\nb');
+    parser.chunk = 'a\nb';
     assertEquals(parser.readNext(), 'a');
     assertEquals(parser.position, { line: 1, column: 1 });
     assertEquals(parser.hasNext(), true);
@@ -35,7 +35,7 @@ Deno.test('sax parse', async () => {
     }).on('end_prefix_mapping', (ns, uri) => {
         console.log(`mapping end ${ns}: ${uri}`);
     });
-    const file = await Deno.open('mod_test.xml');
+    const file = await Deno.open('parser_test.xml');
     await Deno.copy(file, parser.getWriter());
     file.close();
 });
