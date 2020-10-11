@@ -7,12 +7,12 @@ The basic logic of this XML parser was obtained by reading the source code of [s
 ## Usage
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/saxp@v0.3/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/saxp@v0.4/mod.ts';
 
-// create parser instance
+// create a SAX parser instance
 const parser = new SAXParser();
 
-// add sax event handlers
+// add SAX event handlers
 parser.on('start_prefix_mapping', (ns, uri) => {
     console.log(`mapping start ${ns}: ${uri}`);
 }).on('text', (text, element) => {
@@ -21,13 +21,12 @@ parser.on('start_prefix_mapping', (ns, uri) => {
     }
 });
 
-// parse
+// run parser, input source is Deno.Reader
 const file = await Deno.open('parser_test.xml');
-await Deno.copy(file, parser.getWriter());
+await parser.parse(file);
 file.close();
 ```
 
 ## License
 
-The scripts and documentation in this project are released under the
-[MIT License](LICENSE)
+The scripts and documentation in this project are released under the [MIT License](LICENSE)

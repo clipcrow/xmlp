@@ -159,6 +159,10 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         };
     }
 
+    async parse(reader: Deno.Reader) {
+        await Deno.copy(reader, this.getWriter());
+    }
+
     on(event: 'start_document', listener: () => void): this;
     on(event: 'doctype', listener: (doctype: string) => void): this;
     on(event: 'sgml_declaration', listener: (sgmlDecl: string) => void): this;

@@ -28,7 +28,7 @@ Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     assertEquals(parser.hasNext(), false);
 });
 
-Deno.test('sax parse', async () => {
+Deno.test('SAXParser on & parse', async () => {
     const parser = new SAXParser();
     let assertionCount = 0;
     let elementCount = 0;
@@ -50,7 +50,7 @@ Deno.test('sax parse', async () => {
         }
     });
     const file = await Deno.open('parser_test.xml');
-    await Deno.copy(file, parser.getWriter());
+    await parser.parse(file);
     file.close();
     assertEquals(assertionCount, 3);
     assertEquals(elementCount, 18);
