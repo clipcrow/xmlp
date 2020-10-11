@@ -30,18 +30,18 @@ file.close();
 ## Usage: PullParser
 
 ```typeScript
-import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.5/mod.ts';
+import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.5/mod.ts';
 
-    // create a pull parser instance
-    const parser = new PullParser();
+// create a pull parser instance
+const parser = new PullParser();
 
-    // create an ES6 generator
-    const file = await Deno.readFile('parser_test.xml');
-    const events = parser.parse(file);
+// create an ES6 generator
+const file = await Deno.readFile('parser_test.xml');
+const events = parser.parse(file);
 
-    // pull events
-    console.log(events.next().value); // ['start_document']);
-    console.log(events.next().value); // ['processing_instruction', 'xml version="1.0" encoding="utf-8"']);
+// pull events
+console.log(events.next().value); // ['start_document']);
+console.log(events.next().value); // ['processing_instruction', 'xml version="1.0" encoding="utf-8"']);
 ```
 
 ## License
