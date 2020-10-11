@@ -1,13 +1,13 @@
 # XML Parser for Deno
 
-[![ci](https://github.com/m-kur/saxp/workflows/ci/badge.svg)](https://github.com/m-kur/saxp/actions)
+[![ci](https://github.com/m-kur/xmlp/workflows/ci/badge.svg)](https://github.com/m-kur/xmlp/actions)
 
 The basic logic of this XML parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
 
 ## Usage
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/saxp@v0.4/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.4/mod.ts';
 
 // create a SAX parser instance
 const parser = new SAXParser();

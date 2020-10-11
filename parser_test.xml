@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:m="https://saxp.test/m">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:m="https://xmlp.test/m">
 	<channel>
 		<title>SAX Parser for Deno</title>
 		<description>SAX Parser Library for Deno Stream Writer</description>
-		<link>https://saxp.test/m/saxp</link>
-		<atom:link href="https://saxp.test/m/saxp" rel="self" type="application/rss+xml"/>
+		<link>https://xmlp.test/m/saxp</link>
+		<atom:link href="https://xmlp.test/m/saxp" rel="self" type="application/rss+xml"/>
 		<lastBuildDate>Sat, 10 Oct 2020 9:00:00 GMT</lastBuildDate>
 		<managingEditor><![CDATA[Masataka Kurihara <m@botsignal.com>]]></managingEditor>
 		<item>
 			<title>Getting Start</title>
-			<link>https://saxp.test/m/saxp/2020/10/10/</link>
+			<link>https://xmlp.test/m/saxp/2020/10/10/</link>
 			<guid isPermaLink="false">urn:uuid:12345678-abcd-efgh-ijkl-90mn123opq4r</guid>
 			<pubDate>Sat, 10 Oct 2020 12:00:00 GMT</pubDate>
 			<description>SAXPの利用方法と、サンプルコード</description>

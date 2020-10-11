@@ -37,7 +37,7 @@ Deno.test('SAXParser on & parse', async () => {
         if (ns === 'atom') {
             assertEquals(uri, 'http://www.w3.org/2005/Atom');
         } else if (ns === 'm') {
-            assertEquals(uri, 'https://saxp.test/m');
+            assertEquals(uri, 'https://xmlp.test/m');
         } else {
             assert(false);
         }
