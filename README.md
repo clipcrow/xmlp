@@ -5,7 +5,7 @@ The basic logic of this sax-parser was obtained by reading the source code of [s
 ## Usage
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/saxp/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/saxp@v0.1/mod.ts';
 
 const parser = new SAXParser();
 parser.on('start_prefix_mapping', (ns, uri) => {
@@ -13,7 +13,7 @@ parser.on('start_prefix_mapping', (ns, uri) => {
 }).on('end_prefix_mapping', (ns, uri) => {
     console.log(`mapping end ${ns}: ${uri}`);
 });
-const file = await Deno.open('mod_test.xml');
+const file = await Deno.open('parser_test.xml');
 await Deno.copy(file, parser.getWriter());
 file.close();
 ```

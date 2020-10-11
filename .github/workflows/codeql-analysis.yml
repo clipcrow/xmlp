@@ -8,25 +8,20 @@ on:
 
 jobs:
   analyze:
-    name: Analyze
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
 
     steps:
-    - name: Checkout repository
+    - name: Setup repo
       uses: actions/checkout@v2
       with:
         fetch-depth: 2
-
-    - name: Initialize CodeQL
+    - name: Setup CodeQL
       uses: github/codeql-action/init@v1
       with:
-        languages: 'typescript'
-
+        languages: javascript
     - name: Autobuild
       uses: github/codeql-action/autobuild@v1
-
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
