@@ -1,5 +1,5 @@
 import { assert, assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { ParserBase, SAXParser } from './parser.ts';
+import { ParserBase, SAXParser, PullParser } from './parser.ts';
 
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     // protected -> public visiblity
@@ -28,7 +28,7 @@ Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     assertEquals(parser.hasNext(), false);
 });
 
-Deno.test('SAXParser on & parse', async () => {
+Deno.test('SAXParser on & parse(Deno.Reader)', async () => {
     const parser = new SAXParser();
     let assertionCount = 0;
     let elementCount = 0;
@@ -54,4 +54,34 @@ Deno.test('SAXParser on & parse', async () => {
     file.close();
     assertEquals(assertionCount, 3);
     assertEquals(elementCount, 18);
+});
+
+Deno.test('SAXParser parse(Uint8Array)', () => {
+    const parser = new SAXParser();
+    let flag = false;
+    parser.on('text', (text) => {
+        flag = true;
+        assertEquals(text, 'world');
+    });
+    parser.parse(new TextEncoder().encode('<hello>world</hello>'));
+    assertEquals(flag, true);
+});
+
+Deno.test('SAXParser parse(string)', () => {
+    const parser = new SAXParser();
+    let flag = false;
+    parser.on('start_element', (element) => {
+        flag = true;
+        assertEquals(element.qName, 'hello');
+    });
+    parser.parse('<hello>world</hello>');
+    assertEquals(flag, true);
+});
+
+Deno.test('PullParser', async () => {
+    const parser = new PullParser();
+    const file = await Deno.readFile('parser_test.xml');
+    const events = parser.parse(file);
+    assertEquals(events.next().value, ['start_document']);
+    assertEquals(events.next().value, ['processing_instruction', 'xml version="1.0" encoding="utf-8"']);
 });
