@@ -1,4 +1,4 @@
-import { Locatable, SAXHandler, SAXContext, SAXPosition, ElementInfo } from './context.ts';
+import { Locatable, SAXHandler, SAXContext, SAXPosition, ElementInfo, SAXEvent, PullValue } from './context.ts';
 import * as handler from './handler.ts';
 
 export class ParserBase implements Locatable {
@@ -190,6 +190,30 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
 }
 
 export class PullParser extends ParserBase {
+    protected marshallEvent(event: SAXEvent): PullValue {
+        const name = event[0];
+        const result: PullValue = { name };
+        if (name === 'processing_instruction') {
+            result['procInst'] = event[1];
+        } else if (name === 'sgml_declaration') {
+            result['sgmlDecl'] = event[1];
+        } else if (name === 'text') {
+            result['text'] = event[1];
+            result['element'] = event[2];
+            result['cdata'] = event[3];
+        } else if (name === 'doctype') {
+            result['doctype'] = event[1];
+        } else if (name === 'start_prefix_mapping' || 'end_prefix_mapping') {
+            result['ns'] = event[1];
+            result['uri'] = event[2];
+        } else if (name === 'start_element' || 'end_element') {
+            result['element'] = event[1];
+        } else if (name === 'comment') {
+            result['comment'] = event[1];
+        }
+        return result;
+    }
+
     * parse(source: Uint8Array | string) {
         this.chunk = typeof source === 'string' ? source : new TextDecoder().decode(source);
         while(this.hasNext()) {
@@ -201,7 +225,7 @@ export class PullParser extends ParserBase {
             const c = this.readNext();
             const events = handler(this.cx, c);
             for (const event of events) {
-                yield event;
+                yield this.marshallEvent(event);
             }
         }
     }

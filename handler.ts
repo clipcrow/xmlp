@@ -1,4 +1,4 @@
-import { SAXContext, SAXEvent, SAXError, ElementInfo } from './context.ts';
+import { SAXContext, SAXEvent, XMLParseError, ElementInfo } from './context.ts';
 
 const NAME_HEAD = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
 const NAME_BODY = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
@@ -15,7 +15,7 @@ export function handleBeforeDocument(cx: SAXContext, c: string): SAXEvent[] {
         cx.state = 'FOUND_LT';
     } else {
         if (!isWhitespace(c)) {
-            throw new SAXError('Non-whitespace before document.', cx);
+            throw new XMLParseError('Non-whitespace before document.', cx);
         }
     }
     return events;
@@ -64,7 +64,7 @@ export function handleFoundLT(cx: SAXContext, c: string): SAXEvent[] {
         } else if (c === '/') {
             cx.state = 'END_TAG';
         } else {
-            throw new SAXError('Unencoded <', cx);
+            throw new XMLParseError('Unencoded <', cx);
         }
     }
     return events;
@@ -106,7 +106,7 @@ export function handleSgmlDecl(cx: SAXContext, c: string): SAXEvent[] {
         cx.state = 'COMMENT';
     } else if (sgmlCmd === 'DOCTYPE') {
         if (cx.elementLength > 0) {
-            throw new SAXError('Inappropriately located doctype declaration', cx);
+            throw new XMLParseError('Inappropriately located doctype declaration', cx);
         }
         cx.clearMemento();
         cx.state = 'DOCTYPE';
@@ -241,7 +241,7 @@ export function handleStartTag(cx: SAXContext, c: string): SAXEvent[] {
             cx.state = 'EMPTY_ELEMENT_TAG';
         } else {
             if (!isWhitespace(c)) {
-                throw new SAXError('Invalid character in element name', cx);
+                throw new XMLParseError('Invalid character in element name', cx);
             }
             cx.state = 'START_TAG_STUFF';
         }
@@ -262,7 +262,7 @@ export function handleStartTagStuff(cx: SAXContext, c: string): SAXEvent[] {
             cx.appendMemento(c);
             cx.state = 'ATTRIBUTE_NAME';
         } else {
-            throw new SAXError('Invalid attribute name', cx);
+            throw new XMLParseError('Invalid attribute name', cx);
         }
     }
     return events;
@@ -272,7 +272,7 @@ function emitEndElement(cx: SAXContext, qName: string): SAXEvent[] {
     let events: SAXEvent[] = [];
     const element = cx.popElement()!;
     if (element.qName !== qName) {
-        throw new SAXError(`Illegal element structure, ${element.qName} & ${qName}`, cx);
+        throw new XMLParseError(`Illegal element structure, ${element.qName} & ${qName}`, cx);
     }
     events = [['end_element', new ElementInfo(element)]];
     for(const { ns, uri } of element.prefixMappings) {
@@ -285,7 +285,7 @@ function emitEndElement(cx: SAXContext, qName: string): SAXEvent[] {
 export function handleEmptyElementTag(cx: SAXContext, c: string): SAXEvent[] {
     let events: SAXEvent[] = [];
     if (c !== '>') {
-        throw new SAXError('Forward-slash in start-tag not followed by &gt', cx);
+        throw new XMLParseError('Forward-slash in start-tag not followed by &gt', cx);
     }
     const element = cx.peekElement()!;
     element.standAlone = true;
@@ -310,7 +310,7 @@ export function handleAttributeName(cx: SAXContext, c: string): SAXEvent[] {
     } else if (c === '=') {
         newAttribute(cx);
     } else {
-        throw new SAXError(c === '>' ? 'Attribute without value' : 'Invalid attribute name', cx);
+        throw new XMLParseError(c === '>' ? 'Attribute without value' : 'Invalid attribute name', cx);
     }
     return [];
 }
@@ -320,7 +320,7 @@ export function handleAttributeNameSawWhite(cx: SAXContext, c: string): SAXEvent
     if (c === '=') {
         newAttribute(cx);
     } else if (!isWhitespace(c)) {
-        throw new SAXError('Attribute without value', cx);
+        throw new XMLParseError('Attribute without value', cx);
     }
     return [];
 }
@@ -333,7 +333,7 @@ export function handleAttributeEqual(cx: SAXContext, c: string): SAXEvent[] {
             cx.quote = c as ('"' | '\'');
             cx.state = 'ATTRIBUTE_VALUE_START';
         } else {
-            throw new SAXError('Unquoted attribute value', cx);
+            throw new XMLParseError('Unquoted attribute value', cx);
         }
     }
     return [];
@@ -364,7 +364,7 @@ export function handleAttributeValueEnd(cx: SAXContext, c: string): SAXEvent[] {
         events = emitStartElement(cx);
         cx.state = 'GENERAL_STUFF';
     } else {
-        throw new SAXError('Invalid attribute name', cx);
+        throw new XMLParseError('Invalid attribute name', cx);
     }
     return events;
 }
@@ -391,7 +391,7 @@ export function handleEndTag(cx: SAXContext, c: string): SAXEvent[] {
     } else if (isWhitespace(c)) {
         cx.state = 'END_TAG_SAW_WHITE';
     } else {
-        throw new SAXError('Invalid element name', cx);
+        throw new XMLParseError('Invalid element name', cx);
     }
     return events;
 }
@@ -402,7 +402,7 @@ export function handleEndTagSawWhite(cx: SAXContext, c: string): SAXEvent[] {
     if (c === '>') {
         events = closeElement(cx);
     } else if (!isWhitespace(c)) {
-        throw new SAXError('Invalid characters in end-tag', cx);
+        throw new XMLParseError('Invalid characters in end-tag', cx);
     }
     return events;
 }
@@ -410,7 +410,7 @@ export function handleEndTagSawWhite(cx: SAXContext, c: string): SAXEvent[] {
 // AFTER_DOCUMENT; Error
 export function handleAfterDocument(cx: SAXContext, c: string): SAXEvent[] {
     if (!isWhitespace(c)) {
-        throw new SAXError('Non-whitespace after document.', cx);
+        throw new XMLParseError('Non-whitespace after document.', cx);
     }
     return [];
 }

@@ -206,7 +206,7 @@ export interface SAXHandler {
     (cx: SAXContext, c: string): SAXEvent[];
 }
 
-export class SAXError extends Error {
+export class XMLParseError extends Error {
     private _position: SAXPosition;
 
     constructor(message: string, cx: SAXContext) {
@@ -221,4 +221,10 @@ export class SAXError extends Error {
     get column(): number {
         return this._position.column;
     }
+}
+
+export type PullValue = {
+    name: string;
+    // deno-lint-ignore no-explicit-any
+    [key: string]: any;
 }

@@ -5,7 +5,7 @@
 ## SAXParser
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.7/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.8/mod.ts';
 
 // create a SAX parser instance
 const parser = new SAXParser();
@@ -28,7 +28,7 @@ file.close();
 ## PullParser
 
 ```typeScript
-import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.7/mod.ts';
+import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.8/mod.ts';
 
 // create a pull parser instance
 const parser = new PullParser();
@@ -39,9 +39,9 @@ const events = parser.parse(file);
 
 // pull events
 console.log(events.next().value);
-// > ['start_document']
+// { name: 'start_document' }
 console.log(events.next().value);
-// > ['processing_instruction', 'xml version="1.0" encoding="utf-8"']
+// { name: 'processing_instruction', procInst: 'xml version="1.0" encoding="utf-8"' }
 ```
 
 ## DOMParser
