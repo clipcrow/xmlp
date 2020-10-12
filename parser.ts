@@ -1,12 +1,12 @@
-import { Locatable, SAXHandler, SAXContext, SAXPosition, ElementInfo, SAXEvent, PullValue } from './context.ts';
+import { Locatable, XMLParseHandler, XMLParseContext, XMLPosition, ElementInfo, XMLParseEvent } from './context.ts';
 import * as handler from './handler.ts';
 
 export class ParserBase implements Locatable {
-    private _cx = new SAXContext(this);
-    private _handlers: { [state: string]: SAXHandler } = {};
+    private _cx = new XMLParseContext(this);
+    private _handlers: { [state: string]: XMLParseHandler } = {};
     private _chunk = '';
     private _index = -1;
-    private _position: SAXPosition = { line: 1, column: 0 };
+    private _position: XMLPosition = { line: 1, column: 0 };
 
     /*
         The basic logic of this XML parser was obtained by reading the source code of sax-js.
@@ -66,16 +66,16 @@ export class ParserBase implements Locatable {
         this.appendHandler('AFTER_DOCUMENT', handler.handleAfterDocument);
     }
 
-    protected get cx(): SAXContext {
+    protected get cx(): XMLParseContext {
         return this._cx;
     }
 
-    protected appendHandler(state: string, handler: SAXHandler): this {
+    protected appendHandler(state: string, handler: XMLParseHandler): this {
         this._handlers[state] = handler;
         return this;
     }
 
-    protected get handlers(): { [state: string]: SAXHandler } {
+    protected get handlers(): { [state: string]: XMLParseHandler } {
         return this._handlers;
     }
 
@@ -100,7 +100,7 @@ export class ParserBase implements Locatable {
         return c;
     }
 
-    get position(): SAXPosition {
+    get position(): XMLPosition {
         return this._position;
     }
 }
@@ -189,10 +189,16 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     }
 }
 
+type PullResult = {
+    name: string;
+    // deno-lint-ignore no-explicit-any
+    [key: string]: any;
+}
+
 export class PullParser extends ParserBase {
-    protected marshallEvent(event: SAXEvent): PullValue {
+    protected marshallEvent(event: XMLParseEvent): PullResult {
         const name = event[0];
-        const result: PullValue = { name };
+        const result: PullResult = { name };
         if (name === 'processing_instruction') {
             result['procInst'] = event[1];
         } else if (name === 'sgml_declaration') {

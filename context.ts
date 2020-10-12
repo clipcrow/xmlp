@@ -134,13 +134,13 @@ export class ElementInfo extends QName {
     }
 }
 
-export type SAXPosition = { line: number, column: number };
+export type XMLPosition = { line: number, column: number };
 
 export interface Locatable {
-    position: SAXPosition;
+    position: XMLPosition;
 }
 
-export class SAXContext {
+export class XMLParseContext {
     private _locator?: Locatable;
     private _memento = '';
     private _elementStack: Element[] = [];
@@ -153,7 +153,7 @@ export class SAXContext {
         this._locator = locator;
     }
 
-    get position(): SAXPosition {
+    get position(): XMLPosition {
         return this._locator?.position || { line: -1, column: -1 };
     }
 
@@ -200,16 +200,16 @@ export class SAXContext {
 }
 
 // deno-lint-ignore no-explicit-any
-export type SAXEvent = [string, ...any[]];
+export type XMLParseEvent = [string, ...any[]];
 
-export interface SAXHandler {
-    (cx: SAXContext, c: string): SAXEvent[];
+export interface XMLParseHandler {
+    (cx: XMLParseContext, c: string): XMLParseEvent[];
 }
 
 export class XMLParseError extends Error {
-    private _position: SAXPosition;
+    private _position: XMLPosition;
 
-    constructor(message: string, cx: SAXContext) {
+    constructor(message: string, cx: XMLParseContext) {
         super(message);
         this._position = cx.position;
     }
@@ -221,10 +221,4 @@ export class XMLParseError extends Error {
     get column(): number {
         return this._position.column;
     }
-}
-
-export type PullValue = {
-    name: string;
-    // deno-lint-ignore no-explicit-any
-    [key: string]: any;
 }

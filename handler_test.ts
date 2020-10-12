@@ -1,10 +1,10 @@
 import { assertEquals, assertThrows } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { SAXContext } from './context.ts';
+import { XMLParseContext } from './context.ts';
 import * as handler from './handler.ts';
 
 Deno.test('handleBeforeDocument', () => {
     // whitespace
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     handler.handleBeforeDocument(cx, ' ');
     assertEquals(cx.state, 'BEFORE_DOCUMENT');
     // FOUND_LT
@@ -16,7 +16,7 @@ Deno.test('handleBeforeDocument', () => {
 });
 
 Deno.test('handleGeneralStuff', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // text including whitespace
     cx.state = 'GENERAL_STUFF';
     cx.newElement('a');
@@ -31,7 +31,7 @@ Deno.test('handleGeneralStuff', () => {
 });
 
 Deno.test('handleFoundLT', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // PROC_INST
     cx.state = 'FOUND_LT';
     handler.handleFoundLT(cx, '?');
@@ -61,7 +61,7 @@ Deno.test('handleFoundLT', () => {
 });
 
 Deno.test('handleProcInst', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // PROC_INST_ENDING
     cx.state = 'PROC_INST';
     handler.handleProcInst(cx, '?');
@@ -69,7 +69,7 @@ Deno.test('handleProcInst', () => {
 });
 
 Deno.test('handleProcInstEnding', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // processing_instruction & GENERAL_STUFF
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
@@ -85,7 +85,7 @@ Deno.test('handleProcInstEnding', () => {
 });
 
 Deno.test('handleSgmlDecl', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // CDATA
     cx.state = 'SGML_DECL';
     cx.appendMemento('[CDATA');
@@ -118,7 +118,7 @@ Deno.test('handleSgmlDecl', () => {
 });
 
 Deno.test('handleCdata', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // CDATA_ENDING
     cx.state = 'CDATA';
     handler.handleCdata(cx, ']');
@@ -126,7 +126,7 @@ Deno.test('handleCdata', () => {
 });
 
 Deno.test('handleCdataEnding', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // CDATA_ENDING2
     cx.state = 'CDATA_ENDING';
     handler.handleCdataEnding(cx, ']');
@@ -140,7 +140,7 @@ Deno.test('handleCdataEnding', () => {
 });
 
 Deno.test('handleCdataEnding2', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // GENERAL_STUFF
     cx.state = 'CDATA_ENDING_2';
     cx.appendMemento('test');
@@ -164,7 +164,7 @@ Deno.test('handleCdataEnding2', () => {
 });
 
 Deno.test('handleComment', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // COMMENT_ENDING
     cx.state = 'COMMENT'
     handler.handleComment(cx, '-');
@@ -172,7 +172,7 @@ Deno.test('handleComment', () => {
 });
 
 Deno.test('handleCommentEnding', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // COMMENT_ENDING2
     cx.state = 'COMMENT_ENDING';
     handler.handleCommentEnding(cx, '-');
@@ -186,7 +186,7 @@ Deno.test('handleCommentEnding', () => {
 });
 
 Deno.test('handleCommentEnding2', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // comment & GENERAL_STUFF
     cx.state = 'COMMENT_ENDING_2';
     cx.appendMemento('test');
@@ -203,7 +203,7 @@ Deno.test('handleCommentEnding2', () => {
 });
 
 Deno.test('handleDoctype', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // doctype & GENERAL_STUFF
     cx.state = 'DOCTYPE';
     cx.appendMemento('tes');
@@ -215,7 +215,7 @@ Deno.test('handleDoctype', () => {
 });
 
 Deno.test('handleStartTag', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // start_element & GENERAL_STUFF
     cx.state = 'START_TAG';
     cx.appendMemento('a');
@@ -237,7 +237,7 @@ Deno.test('handleStartTag', () => {
 });
 
 Deno.test('handleStartTagStuff', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // start_element & GENERAL_STUFF
     cx.state = 'START_TAG_STUFF';
     cx.newElement('a');
@@ -260,7 +260,7 @@ Deno.test('handleStartTagStuff', () => {
 });
 
 Deno.test('handleEmptyElementTag', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // start_element & end_element & GENERAL_STUFF
     cx.state = 'EMPTY_ELEMENT_TAG';
     cx.newElement('test');
@@ -276,7 +276,7 @@ Deno.test('handleEmptyElementTag', () => {
 });
 
 Deno.test('handleAttributeName', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // ATTRIBUTE_NAME_SAW_WHITE
     cx.state = 'ATTRIBUTE_NAME';
     handler.handleAttributeName(cx, ' ');
@@ -294,7 +294,7 @@ Deno.test('handleAttributeName', () => {
 });
 
 Deno.test('handleAttributeNameSawWhite', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // ATTRIBUTE_EQUAL
     cx.state = 'ATTRIBUTE_NAME_SAW_WHITE';
     cx.newElement('a');
@@ -308,7 +308,7 @@ Deno.test('handleAttributeNameSawWhite', () => {
 });
 
 Deno.test('handleAttributeEqual', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // ATTRIBUTE_VALUE_START
     cx.state = 'ATTRIBUTE_EQUAL';
     handler.handleAttributeEqual(cx, '"');
@@ -320,7 +320,7 @@ Deno.test('handleAttributeEqual', () => {
 });
 
 Deno.test('handleAttributeValueStart', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // ATTRIBUTE_VALUE_END
     cx.state = 'ATTRIBUTE_VALUE_START';
     cx.newElement('a');
@@ -333,7 +333,7 @@ Deno.test('handleAttributeValueStart', () => {
 });
 
 Deno.test('handleAttributeValueEnd', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // START_TAG_STUFF
     cx.state = 'ATTRIBUTE_VALUE_END';
     handler.handleAttributeValueEnd(cx, ' ');
@@ -355,7 +355,7 @@ Deno.test('handleAttributeValueEnd', () => {
 });
 
 Deno.test('handleEndTag', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // end_element & GENERAL_STUFF
     cx.state = 'END_TAG';
     cx.newElement('a');
@@ -376,7 +376,7 @@ Deno.test('handleEndTag', () => {
 
 
 Deno.test('handleEndTagSawWhite', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // end_element & end_document & AFTER_DOCUMENT
     cx.state = 'END_TAG_SAW_WHITE';
     cx.newElement('test');
@@ -391,7 +391,7 @@ Deno.test('handleEndTagSawWhite', () => {
 });
 
 Deno.test('handleAfterDocument', () => {
-    const cx = new SAXContext();
+    const cx = new XMLParseContext();
     // Error
     cx.state = 'AFTER_DOCUMENT';
     assertThrows(() => handler.handleAfterDocument(cx, 'a'));

@@ -1,4 +1,4 @@
-import { SAXContext, SAXEvent, XMLParseError, ElementInfo } from './context.ts';
+import { XMLParseContext, XMLParseEvent, XMLParseError, ElementInfo } from './context.ts';
 
 const NAME_HEAD = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
 const NAME_BODY = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
@@ -8,8 +8,8 @@ function isWhitespace(c: string): boolean {
 }
 
 // BEFORE_DOCUMENT; FOUND_LT, Error
-export function handleBeforeDocument(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleBeforeDocument(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c === '<') {
         events = [['start_document']];
         cx.state = 'FOUND_LT';
@@ -22,7 +22,7 @@ export function handleBeforeDocument(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // GENERAL_STUFF; FOUND_LT
-export function handleGeneralStuff(cx: SAXContext, c: string): SAXEvent[] {
+export function handleGeneralStuff(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === '<') {
         cx.state = 'FOUND_LT';
     } else {
@@ -46,8 +46,8 @@ function resolveEntity(text: string): string {
 }
 
 // FOUND_LT; SGML_DECL, START_TAG, END_TAG, PROC_INST, Error
-export function handleFoundLT(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleFoundLT(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     const text = resolveEntity(cx.memento).trim();
     cx.clearMemento();
     if (text) {
@@ -71,7 +71,7 @@ export function handleFoundLT(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // PROC_INST; PROC_INST_ENDING
-export function handleProcInst(cx: SAXContext, c: string): SAXEvent[] {
+export function handleProcInst(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === '?') {
         cx.state = 'PROC_INST_ENDING';
     } else {
@@ -81,8 +81,8 @@ export function handleProcInst(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // PROC_INST_ENDING; processing_instruction & GENERAL_STUFF, PROC_INST
-export function handleProcInstEnding(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleProcInstEnding(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c === '>') {
         events = [['processing_instruction', cx.memento]];
         cx.clearMemento();
@@ -95,8 +95,8 @@ export function handleProcInstEnding(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // SGML_DECL; CDATA, COMMENT, DOCTYPE, GENERAL_STUFF, Error
-export function handleSgmlDecl(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleSgmlDecl(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     const sgmlCmd = `${cx.memento}${c}`.toUpperCase();
     if (sgmlCmd === '[CDATA[') {
         cx.clearMemento();
@@ -121,7 +121,7 @@ export function handleSgmlDecl(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // CDATA; CDATA_ENDING
-export function handleCdata(cx: SAXContext, c: string): SAXEvent[] {
+export function handleCdata(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === ']') {
         cx.state = 'CDATA_ENDING';
     } else {
@@ -131,7 +131,7 @@ export function handleCdata(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // CDATA_ENDING; CDATA_ENDING_2, CDATA
-export function handleCdataEnding(cx: SAXContext, c: string): SAXEvent[] {
+export function handleCdataEnding(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === ']') {
         cx.state = 'CDATA_ENDING_2';
     } else {
@@ -142,8 +142,8 @@ export function handleCdataEnding(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // CDATA_ENDING_2; text & GENERAL_STUFF, CDATA
-export function handleCdataEnding2(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleCdataEnding2(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c === '>') {
         if (cx.memento) {
             events = [['text', cx.memento, new ElementInfo(cx.peekElement()!), true]];
@@ -160,7 +160,7 @@ export function handleCdataEnding2(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // COMMENT; COMMENT_ENDING
-export function handleComment(cx: SAXContext, c: string): SAXEvent[] {
+export function handleComment(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === '-') {
         cx.state = 'COMMENT_ENDING';
     } else {
@@ -170,7 +170,7 @@ export function handleComment(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // COMMENT_ENDING; COMMENT_ENDING2, COMMENT
-export function handleCommentEnding(cx: SAXContext, c: string): SAXEvent[] {
+export function handleCommentEnding(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === '-') {
         cx.state = 'COMMENT_ENDING_2';
     } else {
@@ -181,8 +181,8 @@ export function handleCommentEnding(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // COMMENT_ENDING_2; comment & GENERAL_STUFF, COMMENT
-export function handleCommentEnding2(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleCommentEnding2(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c === '>') {
         const comment = cx.memento;
         if (comment) {
@@ -198,8 +198,8 @@ export function handleCommentEnding2(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // DOCTYPE; doctype & GENERAL_STUFF
-export function handleDoctype(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleDoctype(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c === '>') {
         events = [['doctype', cx.memento]];
         cx.clearMemento();
@@ -210,8 +210,8 @@ export function handleDoctype(cx: SAXContext, c: string): SAXEvent[] {
     return events;
 }
 
-function emitStartElement(cx: SAXContext): SAXEvent[] {
-    const events: SAXEvent[] = [];
+function emitStartElement(cx: XMLParseContext): XMLParseEvent[] {
+    const events: XMLParseEvent[] = [];
     const element = cx.peekElement()!;
     for (const { ns, uri } of element.prefixMappings) {
         cx.registerNamespace(ns, uri);
@@ -227,8 +227,8 @@ function emitStartElement(cx: SAXContext): SAXEvent[] {
 }
 
 // START_TAG; start_element & GENERAL_STUFF, EMPTY_ELEMENT_TAG, START_TAG_STUFF, Error
-export function handleStartTag(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleStartTag(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (NAME_BODY.test(c)) {
         cx.appendMemento(c);
     } else {
@@ -250,8 +250,8 @@ export function handleStartTag(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // ELEMENT_STUFF; start_element & GENERAL_STUFF, EMPTY_ELEMENT_TAG, ATTRIBUTE_NAME, Error
-export function handleStartTagStuff(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleStartTagStuff(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (!isWhitespace(c)) {
         if (c === '>') {
             events = emitStartElement(cx);
@@ -268,8 +268,8 @@ export function handleStartTagStuff(cx: SAXContext, c: string): SAXEvent[] {
     return events;
 }
 
-function emitEndElement(cx: SAXContext, qName: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+function emitEndElement(cx: XMLParseContext, qName: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     const element = cx.popElement()!;
     if (element.qName !== qName) {
         throw new XMLParseError(`Illegal element structure, ${element.qName} & ${qName}`, cx);
@@ -282,8 +282,8 @@ function emitEndElement(cx: SAXContext, qName: string): SAXEvent[] {
 }
 
 // EMPTY_ELEMENT_TAG; start_element & end_element & GENERAL_STUFF, Error
-export function handleEmptyElementTag(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleEmptyElementTag(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c !== '>') {
         throw new XMLParseError('Forward-slash in start-tag not followed by &gt', cx);
     }
@@ -294,7 +294,7 @@ export function handleEmptyElementTag(cx: SAXContext, c: string): SAXEvent[] {
     return events;
 }
 
-function newAttribute(cx: SAXContext) {
+function newAttribute(cx: XMLParseContext) {
     const qName = cx.memento;
     cx.clearMemento();
     cx.peekElement()!.newAttribute(qName);
@@ -302,7 +302,7 @@ function newAttribute(cx: SAXContext) {
 }
 
 // ATTRIBUTE_NAME; ATTRIBUTE_EQUAL, ATTRIBUTE_NAME_SAW_WHITE, Error
-export function handleAttributeName(cx: SAXContext, c: string): SAXEvent[] {
+export function handleAttributeName(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (NAME_BODY.test(c)) {
         cx.appendMemento(c);
     } else if (isWhitespace(c)) {
@@ -316,7 +316,7 @@ export function handleAttributeName(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // ATTRIBUTE_NAME_SAW_WHITE; ATTRIBUTE_EQUAL, Error
-export function handleAttributeNameSawWhite(cx: SAXContext, c: string): SAXEvent[] {
+export function handleAttributeNameSawWhite(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === '=') {
         newAttribute(cx);
     } else if (!isWhitespace(c)) {
@@ -326,7 +326,7 @@ export function handleAttributeNameSawWhite(cx: SAXContext, c: string): SAXEvent
 }
 
 // ATTRIBUTE_EQUAL; ATTRIBUTE_VALUE_START, Error
-export function handleAttributeEqual(cx: SAXContext, c: string): SAXEvent[] {
+export function handleAttributeEqual(cx: XMLParseContext, c: string): XMLParseEvent[] {
     // skip whitespace
     if (!isWhitespace(c)) {
         if (c === '"' || c === '\'') {
@@ -340,7 +340,7 @@ export function handleAttributeEqual(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // ATTRIBUTE_VALUE_START; ATTRIBUTE_VALUE_END
-export function handleAttributeValueStart(cx: SAXContext, c: string): SAXEvent[] {
+export function handleAttributeValueStart(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (c === cx.quote) {
         const value = cx.memento;
         cx.clearMemento();
@@ -354,8 +354,8 @@ export function handleAttributeValueStart(cx: SAXContext, c: string): SAXEvent[]
 }
 
 // ATTRIBUTE_VALUE_END; START_TAG_STUFF, EMPTY_ELEMENT_TAG, start_element & GENERAL_STUFF, Error
-export function handleAttributeValueEnd(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleAttributeValueEnd(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (isWhitespace(c)) {
         cx.state = 'START_TAG_STUFF';
     } else if (c === '/') {
@@ -369,7 +369,7 @@ export function handleAttributeValueEnd(cx: SAXContext, c: string): SAXEvent[] {
     return events;
 }
 
-function closeElement(cx: SAXContext): SAXEvent[] {
+function closeElement(cx: XMLParseContext): XMLParseEvent[] {
     const events = emitEndElement(cx, cx.memento);
     cx.clearMemento();
     if (cx.elementLength === 0) {
@@ -382,8 +382,8 @@ function closeElement(cx: SAXContext): SAXEvent[] {
 }
 
 // END_TAG; END_TAG_SAW_WHITE, AFTER_DOCUMENT, GENERAL_STUFF, Error
-export function handleEndTag(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleEndTag(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (NAME_BODY.test(c)) {
         cx.appendMemento(c);
     } else if (c === '>') {
@@ -397,8 +397,8 @@ export function handleEndTag(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // END_TAG_SAW_WHITE; GENERAL_STUFF, AFTER_DOCUMENT, Error
-export function handleEndTagSawWhite(cx: SAXContext, c: string): SAXEvent[] {
-    let events: SAXEvent[] = [];
+export function handleEndTagSawWhite(cx: XMLParseContext, c: string): XMLParseEvent[] {
+    let events: XMLParseEvent[] = [];
     if (c === '>') {
         events = closeElement(cx);
     } else if (!isWhitespace(c)) {
@@ -408,7 +408,7 @@ export function handleEndTagSawWhite(cx: SAXContext, c: string): SAXEvent[] {
 }
 
 // AFTER_DOCUMENT; Error
-export function handleAfterDocument(cx: SAXContext, c: string): SAXEvent[] {
+export function handleAfterDocument(cx: XMLParseContext, c: string): XMLParseEvent[] {
     if (!isWhitespace(c)) {
         throw new XMLParseError('Non-whitespace after document.', cx);
     }

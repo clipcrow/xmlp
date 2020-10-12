@@ -1,5 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { Attribute, AttributeInfo, Element, ElementInfo, SAXContext } from './context.ts';
+import { Attribute, AttributeInfo, Element, ElementInfo, XMLParseContext } from './context.ts';
 
 Deno.test('Attribute xmlns', () => {
     const attribute = new Attribute('xmlns');
@@ -62,8 +62,8 @@ Deno.test('ElementInfo', () => {
     assertEquals(elementInfo.standAlone, true);
 });
 
-Deno.test('SAXContext memento & appendMemento & clearMemento', () => {
-    const cx = new SAXContext();
+Deno.test('XMLParseContext memento & appendMemento & clearMemento', () => {
+    const cx = new XMLParseContext();
     cx.appendMemento('a');
     cx.appendMemento('b');
     assertEquals(cx.memento, 'ab');
@@ -71,8 +71,8 @@ Deno.test('SAXContext memento & appendMemento & clearMemento', () => {
     assertEquals(cx.memento, '');
 });
 
-Deno.test('SAXContext newElement & peekElement & popElement & elementLength', () => {
-    const cx = new SAXContext();
+Deno.test('XMLParseContext newElement & peekElement & popElement & elementLength', () => {
+    const cx = new XMLParseContext();
     cx.newElement('a');
     assertEquals(cx.peekElement()!.qName, 'a');
     assertEquals(cx.elementLength, 1);
@@ -82,8 +82,8 @@ Deno.test('SAXContext newElement & peekElement & popElement & elementLength', ()
     assertEquals(cx.elementLength, 1);
 });
 
-Deno.test('SAXContext registerNamespace & getNamespaceURI', () => {
-    const cx = new SAXContext();
+Deno.test('XMLParseContext registerNamespace & getNamespaceURI', () => {
+    const cx = new XMLParseContext();
     cx.registerNamespace('a', 'https://xmlp.test/xmlns/a');
     assertEquals(cx.getNamespaceURI('a'), 'https://xmlp.test/xmlns/a');
 });
