@@ -5,7 +5,7 @@
 ## SAXParser
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.9/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
 
 // create a SAX parser instance
 const parser = new SAXParser();
@@ -28,7 +28,7 @@ file.close();
 ## PullParser
 
 ```typeScript
-import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.9/mod.ts';
+import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
 
 // create a pull parser instance
 const parser = new PullParser();
@@ -37,11 +37,12 @@ const parser = new PullParser();
 const file = await Deno.readFile('parser_test.xml');
 const events = parser.parse(file);
 
-// pull events
-console.log(events.next().value);
-// { name: 'start_document' }
-console.log(events.next().value);
-// { name: 'processing_instruction', procInst: 'xml version="1.0" encoding="utf-8"' }
+// pull events, using iterator
+console.log([...events].filter(({ name }) => {
+    return name === 'text';
+}).map(({ text, cdata }) => {
+    return cdata ? `<![CDATA[${text}]]>` : text;
+}));
 ```
 
 ## DOMParser

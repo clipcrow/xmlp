@@ -112,7 +112,15 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     private _listeners: { [event: string]: SAXListener[] } = {};
     private _controller?: WritableStreamDefaultController;
 
-    private run() {
+    protected fireListeners(event: XMLParseEvent) {
+        const [name, ...args] = event;
+        const list = this._listeners[name] || [];
+        for (const listener of list) {
+            listener.call(this, ...args);
+        }
+    }
+
+    protected run() {
         while(this.hasNext()) {
             const state = this.cx.state;
             const handler = this.handlers[state];
@@ -121,11 +129,8 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
             }
             const c = this.readNext();
             const events = handler(this.cx, c);
-            for (const [event, ...args] of events) {
-                const list = this._listeners[event] || [];
-                for (const listener of list) {
-                    listener.call(this, ...args);
-                }
+            for (const event of events) {
+                this.fireListeners(event);
             }
         }
     }
@@ -138,7 +143,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
             this.run();
         } catch(e) {
             this._controller?.error(e);
-            throw e;
+            this.fireListeners(['error', e]);
         } finally {
             this._controller = undefined;
         }
@@ -181,6 +186,8 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     on(event: 'end_element', listener: (element: ElementInfo) => void): this;
     on(event: 'end_prefix_mapping', listener: (ns: string, uri: string) => void): this;
     on(event: 'end_document', listener: () => void): this;
+    // deno-lint-ignore no-explicit-any
+    on(event: 'error', listener: (error: any) => void): this;
     on(event: string, listener: SAXListener): this {
         const list = this._listeners[event] || [];
         list.push(listener);
@@ -222,17 +229,20 @@ export class PullParser extends ParserBase {
 
     * parse(source: Uint8Array | string) {
         this.chunk = typeof source === 'string' ? source : new TextDecoder().decode(source);
-        while(this.hasNext()) {
-            const state = this.cx.state;
-            const handler = this.handlers[state];
-            if (!handler) {
-                throw new Error(`Handler for ${state} not found`);
+        try {
+            while(this.hasNext()) {
+                const state = this.cx.state;
+                const handler = this.handlers[state];
+                if (!handler) {
+                    throw `Handler for ${state} not found`;
+                }
+                const events = handler(this.cx, this.readNext());
+                for (const event of events) {
+                    yield this.marshallEvent(event);
+                }
             }
-            const c = this.readNext();
-            const events = handler(this.cx, c);
-            for (const event of events) {
-                yield this.marshallEvent(event);
-            }
+        } catch(e) {
+            yield { name: 'error', error: e };
         }
     }
 }
