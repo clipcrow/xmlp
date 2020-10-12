@@ -2,7 +2,14 @@
 
 [![ci](https://github.com/m-kur/xmlp/workflows/ci/badge.svg)](https://github.com/m-kur/xmlp/actions)
 
+This project is an XML parser implemented for Deno as simply as possible. Currently it supports SAX style and Pull style.
+I'm thinking of using it only in applications that run on Deno. However, there is very little code that depends on Deno, so it's easy to make it available in Node (I don't).
+If you haven't programmed with Deno yet, give it a try. Very nice. See [Deno official](https://deno.land/).
+
 ## SAXParser
+
+When using in SAX style, create an instance of the parser and register the listener in the same way as used in the EventEmitter of Node.
+The XML to be parsed is specified by Deno.Reader, UINT8 array, or a character string.
 
 ```typescript
 import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
@@ -43,9 +50,13 @@ on(event: 'error', listener: (error: any) => void): this;
 ```
 
 You can use "SAXParser" on Deno's stream i/o because this is a simple "UnderlyingSink<Uint8Array>" impl.
-See [parser.ts](parser.ts) / SAXParser#getWriter() -> getStream() -> write() chain.
+See the [parser.ts](parser.ts) / SAXParser#parse() -> #getWriter() -> getStream() -> write() chain.
 
 ## PullParser
+
+I think it's more interesting to write the Pull style than the SAX. This Pull parser is implemented using the ES6 Generator / Iterator mechanism. However, the basic implementation is shared with that of the SAX parser.
+
+Currently the Pull parser supports Uint8 arrays and strings.
 
 ```typeScript
 import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
