@@ -1,5 +1,6 @@
 import { assert, assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { ParserBase, SAXParser, PullParser } from './parser.ts';
+import { ElementInfo, XMLParseContext, XMLParseEvent } from "./context.ts";
+import { ParserBase, SAXParser, PullParser, PullResult } from './parser.ts';
 
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     // protected -> public visiblity
@@ -78,12 +79,35 @@ Deno.test('SAXParser parse(string)', () => {
     assertEquals(flag, true);
 });
 
+Deno.test('marshallEvent', () => {
+    class TestParser extends PullParser {
+        marshallEvent(event: XMLParseEvent): PullResult {
+            return super.marshallEvent(event);
+        }
+    }
+    const parser = new TestParser();
+    const cx = new XMLParseContext();
+    cx.newElement('a');
+    const DUMMY = new ElementInfo(cx.peekElement()!);
+    assertEquals(parser.marshallEvent(['start_document']), { name: 'start_document' });
+    assertEquals(parser.marshallEvent(['processing_instruction', 'a']), { name: 'processing_instruction', procInst: 'a' });
+    assertEquals(parser.marshallEvent(['sgml_declaration', 'a']), { name: 'sgml_declaration', sgmlDecl: 'a' });
+    assertEquals(parser.marshallEvent(['text', 'a', DUMMY, true]), { name: 'text', text: 'a', element: DUMMY, cdata: true });
+    assertEquals(parser.marshallEvent(['doctype', 'a']), { name: 'doctype', doctype: 'a' });
+    assertEquals(parser.marshallEvent(['start_prefix_mapping', 'a', 'b']), { name: 'start_prefix_mapping', ns: 'a', uri: 'b' });
+    assertEquals(parser.marshallEvent(['start_element', DUMMY]), { name: 'start_element', element: DUMMY });
+    assertEquals(parser.marshallEvent(['comment', 'a']), { name: 'comment', comment: 'a' });
+    assertEquals(parser.marshallEvent(['end_element', DUMMY]), { name: 'end_element', element: DUMMY });
+    assertEquals(parser.marshallEvent(['end_prefix_mapping', 'a', 'b']), { name: 'end_prefix_mapping', ns: 'a', uri: 'b' });
+    assertEquals(parser.marshallEvent(['end_document']), { name: 'end_document' });
+});
+
 Deno.test('PullParser', async () => {
     const parser = new PullParser();
     const file = await Deno.readFile('parser_test.xml');
     const events = parser.parse(file);
-    assertEquals(events.next().value, ['start_document']);
-    assertEquals(events.next().value, ['processing_instruction', 'xml version="1.0" encoding="utf-8"']);
+    assertEquals(events.next().value, { name: 'start_document' });
+    assertEquals(events.next().value, { name: 'processing_instruction', procInst: 'xml version="1.0" encoding="utf-8"' });
     while(true) {
         const { done } = events.next();
         if (done) {

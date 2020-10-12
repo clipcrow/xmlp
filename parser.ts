@@ -189,7 +189,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     }
 }
 
-type PullResult = {
+export type PullResult = {
     name: string;
     // deno-lint-ignore no-explicit-any
     [key: string]: any;
@@ -209,10 +209,10 @@ export class PullParser extends ParserBase {
             result['cdata'] = event[3];
         } else if (name === 'doctype') {
             result['doctype'] = event[1];
-        } else if (name === 'start_prefix_mapping' || 'end_prefix_mapping') {
+        } else if (name === 'start_prefix_mapping' || name === 'end_prefix_mapping') {
             result['ns'] = event[1];
             result['uri'] = event[2];
-        } else if (name === 'start_element' || 'end_element') {
+        } else if (name === 'start_element' || name === 'end_element') {
             result['element'] = event[1];
         } else if (name === 'comment') {
             result['comment'] = event[1];
