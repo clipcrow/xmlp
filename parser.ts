@@ -1,4 +1,4 @@
-import { Locatable, XMLParseHandler, XMLParseContext, XMLPosition, ElementInfo, XMLParseEvent } from './context.ts';
+import { Locatable, XMLParseHandler, XMLParseContext, XMLPosition, ElementInfo, XMLParseEvent, XMLParseError } from './context.ts';
 import * as handler from './handler.ts';
 
 export class ParserBase implements Locatable {
@@ -109,7 +109,7 @@ export class ParserBase implements Locatable {
 type SAXListener = (...arg: any[]) => void;
 
 export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> {
-    private _listeners: { [event: string]: SAXListener[] } = {};
+    private _listeners: { [name: string]: SAXListener[] } = {};
     private _controller?: WritableStreamDefaultController;
 
     protected fireListeners(event: XMLParseEvent) {
@@ -121,29 +121,34 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     }
 
     protected run() {
-        while(this.hasNext()) {
-            const state = this.cx.state;
-            const handler = this.handlers[state];
-            if (!handler) {
-                throw new Error(`Handler for ${state} not found`);
+        try {
+            while(this.hasNext()) {
+                const state = this.cx.state;
+                const handler = this.handlers[state];
+                if (!handler) {
+                    throw new Error(`Handler for ${state} not found`);
+                }
+                const events = handler(this.cx, this.readNext());
+                for (const event of events) {
+                    this.fireListeners(event);
+                }
             }
-            const c = this.readNext();
-            const events = handler(this.cx, c);
-            for (const event of events) {
-                this.fireListeners(event);
+        } catch(e) {
+            if (e instanceof XMLParseError) {
+                this.fireListeners(['error', e]);
+                this._controller?.error(e);
+            } else {
+                throw e;
             }
         }
     }
 
     write(chunk: Uint8Array, controller?: WritableStreamDefaultController) {
-        // TextDecoder can resolve BOM.
-        this.chunk = new TextDecoder().decode(chunk);
-        this._controller = controller;
         try {
+            this._controller = controller;
+            // TextDecoder can resolve BOM.
+            this.chunk = new TextDecoder().decode(chunk);
             this.run();
-        } catch(e) {
-            this._controller?.error(e);
-            this.fireListeners(['error', e]);
         } finally {
             this._controller = undefined;
         }
@@ -234,7 +239,7 @@ export class PullParser extends ParserBase {
                 const state = this.cx.state;
                 const handler = this.handlers[state];
                 if (!handler) {
-                    throw `Handler for ${state} not found`;
+                    throw new Error(`Handler for ${state} not found`);
                 }
                 const events = handler(this.cx, this.readNext());
                 for (const event of events) {
@@ -242,7 +247,11 @@ export class PullParser extends ParserBase {
                 }
             }
         } catch(e) {
-            yield { name: 'error', error: e };
+            if (e instanceof XMLParseError) {
+                yield { name: 'error', error: e };
+            } else {
+                throw e;
+            }
         }
     }
 }

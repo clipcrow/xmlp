@@ -5,7 +5,7 @@
 ## SAXParser
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
+import { SAXParser } from 'https://denopkg.com/m-kur/xmlp@v0.11/mod.ts';
 
 // create a SAX parser instance
 const parser = new SAXParser();
@@ -25,10 +25,30 @@ await parser.parse(file);
 file.close();
 ```
 
+SAX event listener register definitions are below.
+
+```typescript
+on(event: 'start_document', listener: () => void): this;
+on(event: 'processing_instruction', listener: (procInst: string) => void): this;
+on(event: 'sgml_declaration', listener: (sgmlDecl: string) => void): this;
+on(event: 'text', listener: (text: string, element: ElementInfo, cdata: boolean) => void): this;
+on(event: 'doctype', listener: (doctype: string) => void): this;
+on(event: 'start_prefix_mapping', listener: (ns: string, uri: string) => void): this;
+on(event: 'start_element', listener: (element: ElementInfo) => void): this;
+on(event: 'comment', listener: (comment: string) => void): this;
+on(event: 'end_element', listener: (element: ElementInfo) => void): this;
+on(event: 'end_prefix_mapping', listener: (ns: string, uri: string) => void): this;
+on(event: 'end_document', listener: () => void): this;
+on(event: 'error', listener: (error: any) => void): this;
+```
+
+You can use "SAXParser" on Deno's stream i/o because this is a simple "UnderlyingSink<Uint8Array>" impl.
+See [parser.ts](parser.ts) / SAXParser#getWriter() -> getStream() -> write() chain.
+
 ## PullParser
 
 ```typeScript
-import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
+import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.11/mod.ts';
 
 // create a pull parser instance
 const parser = new PullParser();

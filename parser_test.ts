@@ -1,5 +1,5 @@
-import { assert, assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { ElementInfo, XMLParseContext, XMLParseEvent } from "./context.ts";
+import { assert, assertEquals, assertThrows } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
+import { ElementInfo, XMLParseContext, XMLParseEvent, XMLParseError } from "./context.ts";
 import { ParserBase, SAXParser, PullParser, PullResult } from './parser.ts';
 
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
@@ -116,7 +116,7 @@ Deno.test('PullParser', async () => {
     }
 });
 
-Deno.test('PullParser XMLParserError', async () => {
+Deno.test('PullParser XMLParseError', async () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</aaaaaa>');
     assertEquals(events.next().value, { name: 'start_document' });
@@ -126,15 +126,26 @@ Deno.test('PullParser XMLParserError', async () => {
     assertEquals(events.next().done, true);
 });
 
-Deno.test('PullParser throw', async () => {
+Deno.test('PullParser iterator throws Error', async () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</a>');
     assertEquals(events.next().value, { name: 'start_document' });
-    assertEquals(events.throw('test').value, { name: 'error', error: 'test' });
+    assertThrows(() => events.throw(new Error()));
     assertEquals(events.next().done, true);
 });
 
-Deno.test('PullParser return', async () => {
+Deno.test('PullParser iterator throws XMLParseError', async () => {
+    const parser = new PullParser();
+    const events = parser.parse('<a>b</a>');
+    assertEquals(events.next().value, { name: 'start_document' });
+    assertEquals(
+        (events.throw(new XMLParseError('', new XMLParseContext())).value as PullResult).name,
+        'error',
+    );
+    assertEquals(events.next().done, true);
+});
+
+Deno.test('PullParser iterator returns', async () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</a>');
     assertEquals(events.next().value, { name: 'start_document' });
