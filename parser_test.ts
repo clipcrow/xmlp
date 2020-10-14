@@ -106,8 +106,15 @@ Deno.test('PullParser', async () => {
     const parser = new PullParser();
     const file = await Deno.readFile('parser_test.xml');
     const events = parser.parse(file);
-    assertEquals(events.next().value, { name: 'start_document' });
     assertEquals(events.next().value, { name: 'processing_instruction', procInst: 'xml version="1.0" encoding="utf-8"' });
+    assertEquals(events.next().value, { name: 'start_document' });
+    assertEquals(events.next().value, { name: 'start_prefix_mapping', ns: 'atom', uri: 'http://www.w3.org/2005/Atom' });
+    assertEquals(events.next().value, { name: 'start_prefix_mapping', ns: 'm', uri: 'https://xmlp.test/m' });
+    assertEquals((events.next().value as PullResult).element.qName, 'rss');
+    assertEquals((events.next().value as PullResult).element.qName, 'channel');
+    assertEquals((events.next().value as PullResult).element.qName, 'title');
+    assertEquals((events.next().value as PullResult).text, 'XML Parser for Deno');
+    assertEquals((events.next().value as PullResult).name, 'end_element');
     while(true) {
         const { done } = events.next();
         if (done) {
