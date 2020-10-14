@@ -106,7 +106,7 @@ export abstract class ParserBase implements Locatable {
 }
 
 // deno-lint-ignore no-explicit-any
-type SAXListener = (...arg: any[]) => void;
+export type SAXListener = (...arg: any[]) => void;
 
 /**
  * SAX-style XML parser.

@@ -69,6 +69,12 @@ const uint8Array = await Deno.readFile('parser_test.xml');
 const events = parser.parse(uint8Array);
 
 // pull events, using iterator
+const event = events.next();
+if (event.value) {
+    console.log(event.value.name);
+}
+
+// using spread operator
 console.log([...events].filter(({ name }) => {
     return name === 'text';
 }).map(({ text, cdata }) => {

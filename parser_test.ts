@@ -159,3 +159,18 @@ Deno.test('PullParser iterator returns', async () => {
     assertEquals(events.return().done, true);
     assertEquals(events.next().done, true);
 });
+
+Deno.test('README', async () => {
+    const parser = new PullParser();
+    const uint8Array = await Deno.readFile('parser_test.xml');
+    const events = parser.parse(uint8Array);
+    const event = events.next();
+    if (event.value) {
+        console.log(event.value.name);
+    }
+    console.log([...events].filter(({ name }) => {
+        return name === 'text';
+    }).map(({ text, cdata }) => {
+        return cdata ? `<![CDATA[${text}]]>` : text;
+    }));
+})
