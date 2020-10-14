@@ -12,7 +12,7 @@ When using in SAX style, create an instance of the parser and register the liste
 The XML to be parsed is specified by Deno.Reader, UINT8 array, or a character string.
 
 ```typescript
-import { SAXParser } from 'https://denopkg.com/masataka/xmlp@v0.11/mod.ts';
+import { SAXParser } from 'https://denopkg.com/masataka/xmlp@v0.1.0/mod.ts';
 
 // create a SAX parser instance
 const parser = new SAXParser();
@@ -59,7 +59,7 @@ I think it's more interesting to write the Pull style than the SAX. This Pull pa
 Currently the Pull parser supports Uint8 arrays and strings, not Deno.Reader.
 
 ```typeScript
-import { PullParser } from 'https://denopkg.com/masataka/xmlp@v0.11/mod.ts';
+import { PullParser } from 'https://denopkg.com/masataka/xmlp@v0.1.0/mod.ts';
 
 // create a pull parser instance
 const parser = new PullParser();
