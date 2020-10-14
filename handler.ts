@@ -9,16 +9,14 @@ function isWhitespace(c: string): boolean {
 
 // BEFORE_DOCUMENT; FOUND_LT, Error
 export function handleBeforeDocument(cx: XMLParseContext, c: string): XMLParseEvent[] {
-    let events: XMLParseEvent[] = [];
     if (c === '<') {
-        events = [['start_document']];
         cx.state = 'FOUND_LT';
     } else {
         if (!isWhitespace(c)) {
             throw new XMLParseError('Non-whitespace before document.', cx);
         }
     }
-    return events;
+    return [];
 }
 
 // GENERAL_STUFF; FOUND_LT
@@ -86,7 +84,7 @@ export function handleProcInstEnding(cx: XMLParseContext, c: string): XMLParseEv
     if (c === '>') {
         events = [['processing_instruction', cx.memento]];
         cx.clearMemento();
-        cx.state = 'GENERAL_STUFF';
+        cx.state = cx.elementLength > 0 ? 'GENERAL_STUFF' : 'BEFORE_DOCUMENT';
     } else {
         cx.appendMemento(`?${c}`);
         cx.state = 'PROC_INST';
@@ -113,7 +111,7 @@ export function handleSgmlDecl(cx: XMLParseContext, c: string): XMLParseEvent[] 
     } else if (c === '>') {
         events = [['sgml_declaration', cx.memento]];
         cx.clearMemento();
-        cx.state = 'GENERAL_STUFF';
+        cx.state = cx.elementLength > 0 ? 'GENERAL_STUFF' : 'BEFORE_DOCUMENT';
     } else {
         cx.appendMemento(c);
     }
@@ -197,13 +195,13 @@ export function handleCommentEnding2(cx: XMLParseContext, c: string): XMLParseEv
     return events;
 }
 
-// DOCTYPE; doctype & GENERAL_STUFF
+// DOCTYPE; doctype & BEFORE_DOCUMENT
 export function handleDoctype(cx: XMLParseContext, c: string): XMLParseEvent[] {
     let events: XMLParseEvent[] = [];
     if (c === '>') {
         events = [['doctype', cx.memento]];
         cx.clearMemento();
-        cx.state = 'GENERAL_STUFF';
+        cx.state = 'BEFORE_DOCUMENT';
     } else {
         cx.appendMemento(c);
     }
@@ -212,6 +210,9 @@ export function handleDoctype(cx: XMLParseContext, c: string): XMLParseEvent[] {
 
 function emitStartElement(cx: XMLParseContext): XMLParseEvent[] {
     const events: XMLParseEvent[] = [];
+    if (cx.elementLength === 1) {
+        events.push(['start_document']);
+    }
     const element = cx.peekElement()!;
     for (const { ns, uri } of element.prefixMappings) {
         cx.registerNamespace(ns, uri);

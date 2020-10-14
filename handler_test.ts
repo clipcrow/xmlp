@@ -70,13 +70,13 @@ Deno.test('handleProcInst', () => {
 
 Deno.test('handleProcInstEnding', () => {
     const cx = new XMLParseContext();
-    // processing_instruction & GENERAL_STUFF
+    // processing_instruction & BEFORE_DOCUMENT
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
     const [[event, procInst]] = handler.handleProcInstEnding(cx, '>');
     assertEquals(event, 'processing_instruction');
     assertEquals(procInst, 'test');
-    assertEquals(cx.state, 'GENERAL_STUFF');
+    assertEquals(cx.state, 'BEFORE_DOCUMENT');
     // stay
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
@@ -102,13 +102,13 @@ Deno.test('handleSgmlDecl', () => {
     cx.appendMemento('DOCTYP');
     handler.handleSgmlDecl(cx, 'E');
     assertEquals(cx.state, 'DOCTYPE');
-    // sgml_declaration & GENERAL_STUFF
+    // sgml_declaration & BEFORE_DOCUMENT
     cx.state = 'SGML_DECL';
     cx.appendMemento('test');
     const [[event, sgml]] = handler.handleSgmlDecl(cx, '>');
     assertEquals(event, 'sgml_declaration');
     assertEquals(sgml, 'test');
-    assertEquals(cx.state, 'GENERAL_STUFF');
+    assertEquals(cx.state, 'BEFORE_DOCUMENT');
     assertEquals(cx.memento, '');
     // Error
     cx.state = 'SGML_DECL';
@@ -204,19 +204,20 @@ Deno.test('handleCommentEnding2', () => {
 
 Deno.test('handleDoctype', () => {
     const cx = new XMLParseContext();
-    // doctype & GENERAL_STUFF
+    // doctype & BEFORE_DOCUMENT
     cx.state = 'DOCTYPE';
     cx.appendMemento('tes');
     handler.handleDoctype(cx, 't');
     const [[event, doctype]] = handler.handleDoctype(cx, '>');
     assertEquals(event, 'doctype');
     assertEquals(doctype, 'test');
-    assertEquals(cx.state, 'GENERAL_STUFF');
+    assertEquals(cx.state, 'BEFORE_DOCUMENT');
 });
 
 Deno.test('handleStartTag', () => {
     const cx = new XMLParseContext();
     // start_element & GENERAL_STUFF
+    cx.newElement('root');
     cx.state = 'START_TAG';
     cx.appendMemento('a');
     const [[event, element]] = handler.handleStartTag(cx, '>');
@@ -239,6 +240,7 @@ Deno.test('handleStartTag', () => {
 Deno.test('handleStartTagStuff', () => {
     const cx = new XMLParseContext();
     // start_element & GENERAL_STUFF
+    cx.newElement('root');
     cx.state = 'START_TAG_STUFF';
     cx.newElement('a');
     const [[event, element]] = handler.handleStartTagStuff(cx, '>');
@@ -262,6 +264,7 @@ Deno.test('handleStartTagStuff', () => {
 Deno.test('handleEmptyElementTag', () => {
     const cx = new XMLParseContext();
     // start_element & end_element & GENERAL_STUFF
+    cx.newElement('root');
     cx.state = 'EMPTY_ELEMENT_TAG';
     cx.newElement('test');
     const [[event0, element0], [event1, element1]] = handler.handleEmptyElementTag(cx, '>');
@@ -322,6 +325,7 @@ Deno.test('handleAttributeEqual', () => {
 Deno.test('handleAttributeValueStart', () => {
     const cx = new XMLParseContext();
     // ATTRIBUTE_VALUE_END
+    cx.newElement('root');
     cx.state = 'ATTRIBUTE_VALUE_START';
     cx.newElement('a');
     cx.peekElement()!.newAttribute('b');
@@ -343,6 +347,7 @@ Deno.test('handleAttributeValueEnd', () => {
     handler.handleAttributeValueEnd(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // start_element & GENERAL_STUFF
+    cx.newElement('root');
     cx.state = 'ATTRIBUTE_VALUE_END';
     cx.newElement('a');
     const [[event, element]] = handler.handleAttributeValueEnd(cx, '>');
