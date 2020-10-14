@@ -1,7 +1,7 @@
 import { Locatable, XMLParseHandler, XMLParseContext, XMLPosition, ElementInfo, XMLParseEvent, XMLParseError } from './context.ts';
 import * as handler from './handler.ts';
 
-export class ParserBase implements Locatable {
+export abstract class ParserBase implements Locatable {
     private _cx = new XMLParseContext(this);
     private _handlers: { [state: string]: XMLParseHandler } = {};
     private _chunk = '';
@@ -108,6 +108,9 @@ export class ParserBase implements Locatable {
 // deno-lint-ignore no-explicit-any
 type SAXListener = (...arg: any[]) => void;
 
+/**
+ * SAX-style XML parser.
+ */
 export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> {
     private _listeners: { [name: string]: SAXListener[] } = {};
     private _controller?: WritableStreamDefaultController;
@@ -154,10 +157,16 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         }
     }
 
+    /**
+     * Convenient function.
+     */
     getStream(): WritableStream<Uint8Array> {
         return new WritableStream<Uint8Array>(this);
     }
 
+    /**
+     * Convenient function. {@code SAXParser#getStream} is used internally.
+     */
     getWriter(): Deno.Writer {
         const streamWriter = this.getStream().getWriter();
         return {
@@ -169,6 +178,10 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         };
     }
 
+    /**
+     * Execute XML pull parsing.
+     * @param source Target XML.
+     */
     async parse(source: Deno.Reader | Uint8Array | string) {
         if (typeof source === 'string') {
             this.chunk = source;
@@ -207,6 +220,9 @@ export type PullResult = {
     [key: string]: any;
 }
 
+/**
+ * Pull-style XML parser. This Pull parser is implemented using the ES6 Generator / Iterator mechanism.
+ */
 export class PullParser extends ParserBase {
     protected marshallEvent(event: XMLParseEvent): PullResult {
         const name = event[0];
@@ -232,6 +248,11 @@ export class PullParser extends ParserBase {
         return result;
     }
 
+    /**
+     * Execute XML pull parsing. this is the ES6 Generator.
+     * @param source Target XML.
+     * @return ES6 Iterator, "value" property is a XML event object typed {@code PullResult} .
+     */
     * parse(source: Uint8Array | string) {
         this.chunk = typeof source === 'string' ? source : new TextDecoder().decode(source);
         try {

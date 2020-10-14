@@ -27,9 +27,9 @@ parser.on('start_prefix_mapping', (ns, uri) => {
 });
 
 // run parser, input source is Deno.Reader or Uint8Array or string
-const file = await Deno.open('parser_test.xml');
-await parser.parse(file);
-file.close();
+const reader = await Deno.open('parser_test.xml');
+await parser.parse(reader);
+reader.close();
 ```
 
 SAX event listener register definitions are below.
@@ -56,7 +56,7 @@ See the [parser.ts](parser.ts) / SAXParser#parse() -> #getWriter() -> getStream(
 
 I think it's more interesting to write the Pull style than the SAX. This Pull parser is implemented using the ES6 Generator / Iterator mechanism. However, the basic implementation is shared with that of the SAX parser.
 
-Currently the Pull parser supports Uint8 arrays and strings.
+Currently the Pull parser supports Uint8 arrays and strings, not Deno.Reader.
 
 ```typeScript
 import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
@@ -65,8 +65,8 @@ import { PullParser } from 'https://denopkg.com/m-kur/xmlp@v0.10/mod.ts';
 const parser = new PullParser();
 
 // create an ES6 generator
-const file = await Deno.readFile('parser_test.xml');
-const events = parser.parse(file);
+const uint8Array = await Deno.readFile('parser_test.xml');
+const events = parser.parse(uint8Array);
 
 // pull events, using iterator
 console.log([...events].filter(({ name }) => {
