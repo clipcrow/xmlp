@@ -58,7 +58,7 @@ I think it's more interesting to write the Pull style than the SAX. This Pull pa
 
 Currently the Pull parser supports Uint8 arrays and strings, not Deno.Reader.
 
-```typeScript
+```typescript
 import { PullParser } from 'https://deno.land/x/xmlp/mod.ts';
 
 // create a pull parser instance
