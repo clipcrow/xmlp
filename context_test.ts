@@ -1,3 +1,5 @@
+// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+
 import { assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
 import { Attribute, AttributeInfo, Element, ElementInfo, XMLParseContext } from './context.ts';
 

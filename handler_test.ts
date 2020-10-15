@@ -1,3 +1,5 @@
+// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+
 import { assertEquals, assertThrows } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
 import { XMLParseContext } from './context.ts';
 import * as handler from './handler.ts';

@@ -1,3 +1,5 @@
+// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+
 export class QName {
     private _qName: string;
     protected _prefix: string;

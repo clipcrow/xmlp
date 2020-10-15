@@ -1,3 +1,5 @@
+// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+
 import { assert, assertEquals, assertThrows } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
 import { ElementInfo, XMLParseContext, XMLParseEvent, XMLParseError } from "./context.ts";
 import { ParserBase, SAXParser, PullParser, PullResult } from './parser.ts';
@@ -110,9 +112,9 @@ Deno.test('PullParser', async () => {
     assertEquals(events.next().value, { name: 'start_document' });
     assertEquals(events.next().value, { name: 'start_prefix_mapping', ns: 'atom', uri: 'http://www.w3.org/2005/Atom' });
     assertEquals(events.next().value, { name: 'start_prefix_mapping', ns: 'm', uri: 'https://xmlp.test/m' });
-    assertEquals((events.next().value as PullResult).element.qName, 'rss');
-    assertEquals((events.next().value as PullResult).element.qName, 'channel');
-    assertEquals((events.next().value as PullResult).element.qName, 'title');
+    assertEquals((events.next().value as PullResult).element!.qName, 'rss');
+    assertEquals((events.next().value as PullResult).element!.qName, 'channel');
+    assertEquals((events.next().value as PullResult).element!.qName, 'title');
     assertEquals((events.next().value as PullResult).text, 'XML Parser for Deno');
     assertEquals((events.next().value as PullResult).name, 'end_element');
     while(true) {

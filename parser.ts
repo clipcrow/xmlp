@@ -1,3 +1,5 @@
+// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+
 import { Locatable, XMLParseHandler, XMLParseContext, XMLPosition, ElementInfo, XMLParseEvent, XMLParseError } from './context.ts';
 import * as handler from './handler.ts';
 
@@ -104,7 +106,9 @@ export abstract class ParserBase implements Locatable {
         return this._position;
     }
 }
-
+/**
+ * Custom SAX event listener type, register by {@code SAXParser#on}.
+ */
 // deno-lint-ignore no-explicit-any
 export type SAXListener = (...arg: any[]) => void;
 
@@ -214,8 +218,24 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     }
 }
 
+/**
+ * PullParser returns a iterator of this.
+ */
 export type PullResult = {
+    /** event name */
     name: string;
+
+    // known properties
+    procInst?: string;
+    sgmlDecl?: string;
+    text?: string;
+    element?: ElementInfo;
+    cdata?: boolean;
+    doctype?: string;
+    ns?: string;
+    uri?: string;
+    comment?: string;
+
     // deno-lint-ignore no-explicit-any
     [key: string]: any;
 }
