@@ -4,6 +4,7 @@ export {
     SAXParser,
     PullParser,
 } from './parser.ts';
+
 export type {
     PullResult,
 } from './parser.ts';
