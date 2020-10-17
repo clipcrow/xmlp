@@ -44,7 +44,7 @@ export class Element extends QName {
     private _parent?: Element;
 
     uri?: string;
-    standAlone = false;
+    emptyElement = false;
 
     constructor(name: string, parent?: Element) {
         super(name);
@@ -78,7 +78,7 @@ export class Element extends QName {
     }
 }
 
-// read only Attribute
+/** information of parsed attribute, readonly. */
 export class AttributeInfo extends QName {
     private _attribute: Attribute;
 
@@ -100,7 +100,7 @@ export class AttributeInfo extends QName {
     }
 }
 
-// read only Element
+/** information of parsed element, readonly. */
 export class ElementInfo extends QName {
     private _element: Element;
 
@@ -127,12 +127,8 @@ export class ElementInfo extends QName {
         });
     }
 
-    get prefixMappings(): { ns: string, uri: string }[] {
-        return this._element.prefixMappings;
-    }
-
-    get standAlone(): boolean {
-        return this._element.standAlone;
+    get emptyElement(): boolean {
+        return this._element.emptyElement;
     }
 }
 
@@ -141,12 +137,12 @@ export interface XMLPosition {
     column: number;
 }
 
-export interface Locatable {
+export interface XMLLocator {
     position: XMLPosition;
 }
 
 export class XMLParseContext {
-    private _locator?: Locatable;
+    private _locator?: XMLLocator;
     private _memento = '';
     private _elementStack: Element[] = [];
     private _namespaces: { [ns: string]: string | undefined } = {};
@@ -154,7 +150,7 @@ export class XMLParseContext {
     quote: '' | '"' | '\'' = '';
     state = 'BEFORE_DOCUMENT';
 
-    constructor(locator?: Locatable) {
+    constructor(locator?: XMLLocator) {
         this._locator = locator;
     }
 
@@ -211,6 +207,7 @@ export interface XMLParseHandler {
     (cx: XMLParseContext, c: string): XMLParseEvent[];
 }
 
+/** XML parsing error. the parser convert this error to "error" event. */
 export class XMLParseError extends Error {
     private _position: XMLPosition;
 
@@ -219,10 +216,12 @@ export class XMLParseError extends Error {
         this._position = cx.position;
     }
 
+    /** line number on XML source */
     get line(): number {
         return this._position.line;
     }
 
+    /** column number on XML source */
     get column(): number {
         return this._position.column;
     }

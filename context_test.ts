@@ -1,7 +1,16 @@
 // Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
 
-import { assertEquals } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { Attribute, AttributeInfo, Element, ElementInfo, XMLParseContext } from './context.ts';
+import {
+    assertEquals,
+} from 'https://deno.land/std@0.74.0/testing/asserts.ts';
+
+import {
+    Attribute,
+    AttributeInfo,
+    Element,
+    ElementInfo,
+    XMLParseContext,
+} from './context.ts';
 
 Deno.test('Attribute xmlns', () => {
     const attribute = new Attribute('xmlns');
@@ -53,7 +62,7 @@ Deno.test('ElementInfo', () => {
     const element = new Element('a:b', parent);
     element.newAttribute('c');
     element.uri = 'https://xmlp.test/xmlns/a';
-    element.standAlone = true;
+    element.emptyElement = true;
     const elementInfo = new ElementInfo(element);
     assertEquals(elementInfo.qName, 'a:b');
     assertEquals(elementInfo.prefix, 'a');
@@ -61,7 +70,7 @@ Deno.test('ElementInfo', () => {
     assertEquals(elementInfo.uri, 'https://xmlp.test/xmlns/a');
     assertEquals(elementInfo.parent!.qName, 'parent');
     assertEquals(elementInfo.attributes[0].qName, 'c');
-    assertEquals(elementInfo.standAlone, true);
+    assertEquals(elementInfo.emptyElement, true);
 });
 
 Deno.test('XMLParseContext memento & appendMemento & clearMemento', () => {

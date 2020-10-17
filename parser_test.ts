@@ -1,8 +1,24 @@
 // Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
 
-import { assert, assertEquals, assertThrows } from 'https://deno.land/std@0.74.0/testing/asserts.ts';
-import { ElementInfo, XMLParseContext, XMLParseEvent, XMLParseError } from "./context.ts";
-import { ParserBase, SAXParser, PullParser, PullResult } from './parser.ts';
+import {
+    assert,
+    assertEquals,
+    assertThrows,
+} from 'https://deno.land/std@0.74.0/testing/asserts.ts';
+
+import {
+    ElementInfo,
+    XMLParseContext,
+    XMLParseEvent,
+    XMLParseError,
+} from "./context.ts";
+
+import {
+    ParserBase,
+    SAXParser,
+    PullParser,
+    PullResult,
+} from './parser.ts';
 
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     // protected -> public visiblity

@@ -1,6 +1,15 @@
 // Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
 
-export * from './parser.ts';
+export {
+    SAXParser,
+    PullParser,
+} from './parser.ts';
+export type {
+    PullResult,
+} from './parser.ts';
 
-// to implement a new handler
-export * from './context.ts';
+export {
+    AttributeInfo,
+    ElementInfo,
+    XMLParseError,
+} from './context.ts';

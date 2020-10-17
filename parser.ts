@@ -1,9 +1,18 @@
 // Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
 
-import { Locatable, XMLParseHandler, XMLParseContext, XMLPosition, ElementInfo, XMLParseEvent, XMLParseError } from './context.ts';
+import {
+    XMLParseHandler,
+    XMLParseContext,
+    XMLParseEvent,
+    XMLParseError,
+    XMLLocator,
+    XMLPosition,
+    ElementInfo,
+} from './context.ts';
+
 import * as handler from './handler.ts';
 
-export abstract class ParserBase implements Locatable {
+export abstract class ParserBase implements XMLLocator {
     private _cx = new XMLParseContext(this);
     private _handlers: { [state: string]: XMLParseHandler } = {};
     private _chunk = '';
@@ -106,19 +115,13 @@ export abstract class ParserBase implements Locatable {
         return this._position;
     }
 }
-/**
- * Custom SAX event listener type, register by {@code SAXParser#on}.
- */
-export interface SAXListener {
-    // deno-lint-ignore no-explicit-any
-    (...arg: any[]): void;
-}
 
 /**
  * SAX-style XML parser.
  */
 export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> {
-    private _listeners: { [name: string]: SAXListener[] } = {};
+    // deno-lint-ignore no-explicit-any
+    private _listeners: { [name: string]: ((...arg: any[]) => void)[] } = {};
     private _controller?: WritableStreamDefaultController;
 
     protected fireListeners(event: XMLParseEvent) {
@@ -152,6 +155,11 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         }
     }
 
+    /**
+     * implements UnderlyingSink<Uint8Array>
+     * @param chunk XML data chunk
+     * @param controller error reporter, Deno writable stream uses internal.
+     */
     write(chunk: Uint8Array, controller?: WritableStreamDefaultController) {
         try {
             this._controller = controller;
@@ -210,9 +218,9 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     on(event: 'end_element', listener: (element: ElementInfo) => void): this;
     on(event: 'end_prefix_mapping', listener: (ns: string, uri: string) => void): this;
     on(event: 'end_document', listener: () => void): this;
+    on(event: 'error', listener: (error: XMLParseError) => void): this;
     // deno-lint-ignore no-explicit-any
-    on(event: 'error', listener: (error: any) => void): this;
-    on(event: string, listener: SAXListener): this {
+    on(event: string, listener: (...arg: any[]) => void): this {
         const list = this._listeners[event] || [];
         list.push(listener);
         this._listeners[event] = list;
