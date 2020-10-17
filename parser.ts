@@ -109,8 +109,10 @@ export abstract class ParserBase implements Locatable {
 /**
  * Custom SAX event listener type, register by {@code SAXParser#on}.
  */
-// deno-lint-ignore no-explicit-any
-export type SAXListener = (...arg: any[]) => void;
+export interface SAXListener {
+    // deno-lint-ignore no-explicit-any
+    (...arg: any[]): void;
+}
 
 /**
  * SAX-style XML parser.
@@ -221,7 +223,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
 /**
  * PullParser returns a iterator of this.
  */
-export type PullResult = {
+export interface PullResult {
     /** event name */
     name: string;
 
@@ -235,9 +237,7 @@ export type PullResult = {
     ns?: string;
     uri?: string;
     comment?: string;
-
-    // deno-lint-ignore no-explicit-any
-    [key: string]: any;
+    error?: XMLParseError;
 }
 
 /**

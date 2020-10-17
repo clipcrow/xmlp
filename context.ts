@@ -136,7 +136,10 @@ export class ElementInfo extends QName {
     }
 }
 
-export type XMLPosition = { line: number, column: number };
+export interface XMLPosition {
+    line: number;
+    column: number;
+}
 
 export interface Locatable {
     position: XMLPosition;
