@@ -9,7 +9,7 @@
             "runtimeExecutable": "deno",
             "runtimeArgs": [
                 "test",
-                "--inspect-brk=127.0.0.1:9229",
+                "--inspect",
                 "--allow-all"
             ],
             "attachSimplePort": 9229
