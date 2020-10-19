@@ -3,7 +3,7 @@
 import {
     assertEquals,
     assertThrows,
-} from 'https://deno.land/std@0.74.0/testing/asserts.ts';
+} from './deps.ts';
 
 import {
     XMLParseContext,
