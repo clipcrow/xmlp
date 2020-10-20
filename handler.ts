@@ -10,8 +10,26 @@ import {
 const NAME_HEAD = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/
 const NAME_BODY = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/
 
-function isWhitespace(c: string): boolean {
+function isWhitespace(c: string): c is (' ' | '\n' | '\r' | '\t') {
     return c === ' ' || c === '\n' || c === '\r' || c === '\t';
+}
+
+function isQuote(c: string): c is ('"' | '\'') {
+    return c === '"' || c === '\'';
+}
+
+export function resolveEntity(text: string): string {
+    let result = text;
+    [
+        { reg: /&amp;/g, ch: '&' },
+        { reg: /&gt;/g, ch: '>' },
+        { reg: /&lt;/g, ch: '<' },
+        { reg: /&quot;/g, ch: '"' },
+        { reg: /&apos;/g, ch: '\'' },
+    ].forEach(({ reg, ch }) => {
+        result = result.replace(reg, ch);
+    });
+    return result;
 }
 
 // BEFORE_DOCUMENT; FOUND_LT, Error
@@ -34,20 +52,6 @@ export function handleGeneralStuff(cx: XMLParseContext, c: string): XMLParseEven
         cx.appendMemento(c);
     }
     return [];
-}
-
-function resolveEntity(text: string): string {
-    let result = text;
-    [
-        [/&amp;/g, '&'],
-        [/&gt;/g, '>'],
-        [/&lt;/g, '<'],
-        [/&quot;/g, '"'],
-        [/&apos;/g, '\''],
-    ].forEach(([reg, ch]) => {
-        result = result.replace(reg, ch as string);
-    });
-    return result;
 }
 
 // FOUND_LT; SGML_DECL, START_TAG, END_TAG, PROC_INST, Error
@@ -337,8 +341,8 @@ export function handleAttributeNameSawWhite(cx: XMLParseContext, c: string): XML
 export function handleAttributeEqual(cx: XMLParseContext, c: string): XMLParseEvent[] {
     // skip whitespace
     if (!isWhitespace(c)) {
-        if (c === '"' || c === '\'') {
-            cx.quote = c as ('"' | '\'');
+        if (isQuote(c)) {
+            cx.quote = c;
             cx.state = 'ATTRIBUTE_VALUE_START';
         } else {
             throw new XMLParseError('Unquoted attribute value', cx);

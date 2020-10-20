@@ -9,19 +9,52 @@ import {
     XMLParseContext,
 } from './context.ts';
 
-import * as handler from './handler.ts';
+import {
+    resolveEntity,
+    handleBeforeDocument,
+    handleGeneralStuff,
+    handleFoundLT,
+    handleProcInst,
+    handleProcInstEnding,
+    handleSgmlDecl,
+    handleCdata,
+    handleCdataEnding,
+    handleCdataEnding2,
+    handleComment,
+    handleCommentEnding,
+    handleCommentEnding2,
+    handleDoctype,
+    handleStartTag,
+    handleStartTagStuff,
+    handleEmptyElementTag,
+    handleAttributeName,
+    handleAttributeNameSawWhite,
+    handleAttributeEqual,
+    handleAttributeValueStart,
+    handleAttributeValueEnd,
+    handleEndTag,
+    handleEndTagSawWhite,
+    handleAfterDocument,
+} from './handler.ts';
+
+Deno.test('resolveEntity', () => {
+    assertEquals(resolveEntity('a&amp;b'), 'a&b');
+    assertEquals(resolveEntity('a&lt;b&gt;'), 'a<b>');
+    assertEquals(resolveEntity('&quot;ab&quot;'), '"ab"');
+    assertEquals(resolveEntity('&apos;ab&apos;'), '\'ab\'');
+});
 
 Deno.test('handleBeforeDocument', () => {
     // whitespace
     const cx = new XMLParseContext();
-    handler.handleBeforeDocument(cx, ' ');
+    handleBeforeDocument(cx, ' ');
     assertEquals(cx.state, 'BEFORE_DOCUMENT');
     // FOUND_LT
-    handler.handleBeforeDocument(cx, '<');
+    handleBeforeDocument(cx, '<');
     assertEquals(cx.state, 'FOUND_LT');
     // Error
     cx.state = 'BEFORE_DOCUMENT';
-    assertThrows(() => handler.handleBeforeDocument(cx, 's'));
+    assertThrows(() => handleBeforeDocument(cx, 's'));
 });
 
 Deno.test('handleGeneralStuff', () => {
@@ -29,13 +62,13 @@ Deno.test('handleGeneralStuff', () => {
     // text including whitespace
     cx.state = 'GENERAL_STUFF';
     cx.newElement('a');
-    handler.handleGeneralStuff(cx, 'a');
-    handler.handleGeneralStuff(cx, ' ');
-    handler.handleGeneralStuff(cx, 'b');
+    handleGeneralStuff(cx, 'a');
+    handleGeneralStuff(cx, ' ');
+    handleGeneralStuff(cx, 'b');
     assertEquals(cx.state, 'GENERAL_STUFF');
     assertEquals(cx.memento, 'a b');
     // FOUND_LT
-    handler.handleGeneralStuff(cx, '<');
+    handleGeneralStuff(cx, '<');
     assertEquals(cx.state, 'FOUND_LT');
 });
 
@@ -43,13 +76,13 @@ Deno.test('handleFoundLT', () => {
     const cx = new XMLParseContext();
     // PROC_INST
     cx.state = 'FOUND_LT';
-    handler.handleFoundLT(cx, '?');
+    handleFoundLT(cx, '?');
     assertEquals(cx.state, 'PROC_INST');
     // text event & SGML_DECL
     cx.state = 'FOUND_LT';
     cx.appendMemento('test');
     cx.newElement('a');
-    const [[event, text, element, cdata]] = handler.handleFoundLT(cx, '!');
+    const [[event, text, element, cdata]] = handleFoundLT(cx, '!');
     assertEquals(event, 'text');
     assertEquals(text, 'test');
     assertEquals(element.qName, 'a');
@@ -57,23 +90,23 @@ Deno.test('handleFoundLT', () => {
     assertEquals(cx.state, 'SGML_DECL');
     // START_TAG'
     cx.state = 'FOUND_LT';
-    handler.handleFoundLT(cx, 'a');
+    handleFoundLT(cx, 'a');
     assertEquals(cx.state, 'START_TAG');
     assertEquals(cx.memento, 'a');
     // END_TAG
     cx.state = 'FOUND_LT';
-    handler.handleFoundLT(cx, '/');
+    handleFoundLT(cx, '/');
     assertEquals(cx.state, 'END_TAG');
     // Error'
     cx.state = 'FOUND_LT';
-    assertThrows(() => handler.handleFoundLT(cx, '-'));
+    assertThrows(() => handleFoundLT(cx, '-'));
 });
 
 Deno.test('handleProcInst', () => {
     const cx = new XMLParseContext();
     // PROC_INST_ENDING
     cx.state = 'PROC_INST';
-    handler.handleProcInst(cx, '?');
+    handleProcInst(cx, '?');
     assertEquals(cx.state, 'PROC_INST_ENDING');
 });
 
@@ -82,14 +115,14 @@ Deno.test('handleProcInstEnding', () => {
     // processing_instruction & BEFORE_DOCUMENT
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
-    const [[event, procInst]] = handler.handleProcInstEnding(cx, '>');
+    const [[event, procInst]] = handleProcInstEnding(cx, '>');
     assertEquals(event, 'processing_instruction');
     assertEquals(procInst, 'test');
     assertEquals(cx.state, 'BEFORE_DOCUMENT');
     // stay
     cx.state = 'PROC_INST_ENDING';
     cx.appendMemento('test');
-    handler.handleProcInstEnding(cx, 'a');
+    handleProcInstEnding(cx, 'a');
     assertEquals(cx.memento, 'test?a');
 });
 
@@ -98,23 +131,23 @@ Deno.test('handleSgmlDecl', () => {
     // CDATA
     cx.state = 'SGML_DECL';
     cx.appendMemento('[CDATA');
-    handler.handleSgmlDecl(cx, '[');
+    handleSgmlDecl(cx, '[');
     assertEquals(cx.state, 'CDATA');
     assertEquals(cx.memento, '');
     // COMMENT
     cx.state = 'SGML_DECL';
     cx.appendMemento('-');
-    handler.handleSgmlDecl(cx, '-');
+    handleSgmlDecl(cx, '-');
     assertEquals(cx.state, 'COMMENT');
     // DOCTYPE
     cx.state = 'SGML_DECL';
     cx.appendMemento('DOCTYP');
-    handler.handleSgmlDecl(cx, 'E');
+    handleSgmlDecl(cx, 'E');
     assertEquals(cx.state, 'DOCTYPE');
     // sgml_declaration & BEFORE_DOCUMENT
     cx.state = 'SGML_DECL';
     cx.appendMemento('test');
-    const [[event, sgml]] = handler.handleSgmlDecl(cx, '>');
+    const [[event, sgml]] = handleSgmlDecl(cx, '>');
     assertEquals(event, 'sgml_declaration');
     assertEquals(sgml, 'test');
     assertEquals(cx.state, 'BEFORE_DOCUMENT');
@@ -123,14 +156,14 @@ Deno.test('handleSgmlDecl', () => {
     cx.state = 'SGML_DECL';
     cx.appendMemento('DOCTYP');
     cx.newElement('a');
-    assertThrows(() => handler.handleSgmlDecl(cx, 'E'));
+    assertThrows(() => handleSgmlDecl(cx, 'E'));
 });
 
 Deno.test('handleCdata', () => {
     const cx = new XMLParseContext();
     // CDATA_ENDING
     cx.state = 'CDATA';
-    handler.handleCdata(cx, ']');
+    handleCdata(cx, ']');
     assertEquals(cx.state, 'CDATA_ENDING');
 });
 
@@ -138,12 +171,12 @@ Deno.test('handleCdataEnding', () => {
     const cx = new XMLParseContext();
     // CDATA_ENDING2
     cx.state = 'CDATA_ENDING';
-    handler.handleCdataEnding(cx, ']');
+    handleCdataEnding(cx, ']');
     assertEquals(cx.state, 'CDATA_ENDING_2');
     // CDATA
     cx.state = 'CDATA_ENDING';
     cx.appendMemento('test');
-    handler.handleCdataEnding(cx, 'a');
+    handleCdataEnding(cx, 'a');
     assertEquals(cx.state, 'CDATA');
     assertEquals(cx.memento, 'test]a');
 });
@@ -154,7 +187,7 @@ Deno.test('handleCdataEnding2', () => {
     cx.state = 'CDATA_ENDING_2';
     cx.appendMemento('test');
     cx.newElement('a');
-    const [[event, text, element, cdata]] = handler.handleCdataEnding2(cx, '>');
+    const [[event, text, element, cdata]] = handleCdataEnding2(cx, '>');
     assertEquals(event, 'text');
     assertEquals(text, 'test');
     assertEquals(element.qName, 'a');
@@ -163,11 +196,11 @@ Deno.test('handleCdataEnding2', () => {
     // stay
     cx.state = 'CDATA_ENDING_2';
     cx.appendMemento('test');
-    handler.handleCdataEnding2(cx, ']');
+    handleCdataEnding2(cx, ']');
     assertEquals(cx.memento, 'test]');
     assertEquals(cx.state, 'CDATA_ENDING_2');
     // CDATA
-    handler.handleCdataEnding2(cx, 'a');
+    handleCdataEnding2(cx, 'a');
     assertEquals(cx.memento, 'test]]]a');
     assertEquals(cx.state, 'CDATA');
 });
@@ -176,7 +209,7 @@ Deno.test('handleComment', () => {
     const cx = new XMLParseContext();
     // COMMENT_ENDING
     cx.state = 'COMMENT'
-    handler.handleComment(cx, '-');
+    handleComment(cx, '-');
     assertEquals(cx.state, 'COMMENT_ENDING');
 });
 
@@ -184,12 +217,12 @@ Deno.test('handleCommentEnding', () => {
     const cx = new XMLParseContext();
     // COMMENT_ENDING2
     cx.state = 'COMMENT_ENDING';
-    handler.handleCommentEnding(cx, '-');
+    handleCommentEnding(cx, '-');
     assertEquals(cx.state, 'COMMENT_ENDING_2');
     // COMMENT
     cx.state = 'COMMENT_ENDING';
     cx.appendMemento('test');
-    handler.handleCommentEnding(cx, 'a');
+    handleCommentEnding(cx, 'a');
     assertEquals(cx.state, 'COMMENT');
     assertEquals(cx.memento, 'test-a');
 });
@@ -199,14 +232,14 @@ Deno.test('handleCommentEnding2', () => {
     // comment & GENERAL_STUFF
     cx.state = 'COMMENT_ENDING_2';
     cx.appendMemento('test');
-    const [[event, comment]] = handler.handleCommentEnding2(cx, '>');
+    const [[event, comment]] = handleCommentEnding2(cx, '>');
     assertEquals(event, 'comment');
     assertEquals(comment, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // COMMENT
     cx.state = 'COMMENT_ENDING_2';
     cx.appendMemento('test');
-    handler.handleCommentEnding2(cx, 'a');
+    handleCommentEnding2(cx, 'a');
     assertEquals(cx.state, 'COMMENT');
     assertEquals(cx.memento, 'test--a');
 });
@@ -216,8 +249,8 @@ Deno.test('handleDoctype', () => {
     // doctype & BEFORE_DOCUMENT
     cx.state = 'DOCTYPE';
     cx.appendMemento('tes');
-    handler.handleDoctype(cx, 't');
-    const [[event, doctype]] = handler.handleDoctype(cx, '>');
+    handleDoctype(cx, 't');
+    const [[event, doctype]] = handleDoctype(cx, '>');
     assertEquals(event, 'doctype');
     assertEquals(doctype, 'test');
     assertEquals(cx.state, 'BEFORE_DOCUMENT');
@@ -229,21 +262,21 @@ Deno.test('handleStartTag', () => {
     cx.newElement('root');
     cx.state = 'START_TAG';
     cx.appendMemento('a');
-    const [[event, element]] = handler.handleStartTag(cx, '>');
+    const [[event, element]] = handleStartTag(cx, '>');
     assertEquals(event, 'start_element');
     assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // EMPTY_ELEMENT_TAG
     cx.state = 'START_TAG';
-    handler.handleStartTag(cx, '/');
+    handleStartTag(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // START_TAG_STUFF
     cx.state = 'START_TAG';
-    handler.handleStartTag(cx, ' ');
+    handleStartTag(cx, ' ');
     assertEquals(cx.state, 'START_TAG_STUFF');
     // Error
     cx.state = 'START_TAG';
-    assertThrows(() => handler.handleStartTag(cx, '?'));
+    assertThrows(() => handleStartTag(cx, '?'));
 });
 
 Deno.test('handleStartTagStuff', () => {
@@ -252,22 +285,22 @@ Deno.test('handleStartTagStuff', () => {
     cx.newElement('root');
     cx.state = 'START_TAG_STUFF';
     cx.newElement('a');
-    const [[event, element]] = handler.handleStartTagStuff(cx, '>');
+    const [[event, element]] = handleStartTagStuff(cx, '>');
     assertEquals(event, 'start_element');
     assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // EMPTY_ELEMENT_TAG
     cx.state = 'START_TAG_STUFF';
-    handler.handleStartTagStuff(cx, '/');
+    handleStartTagStuff(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // ATTRIBUTE_NAME
     cx.state = 'START_TAG_STUFF';
-    handler.handleStartTagStuff(cx, 'a');
+    handleStartTagStuff(cx, 'a');
     assertEquals(cx.state, 'ATTRIBUTE_NAME');
     assertEquals(cx.memento, 'a');
     // Error
     cx.state = 'START_TAG_STUFF';
-    assertThrows(() => handler.handleStartTagStuff(cx, '?'));
+    assertThrows(() => handleStartTagStuff(cx, '?'));
 });
 
 Deno.test('handleEmptyElementTag', () => {
@@ -276,7 +309,7 @@ Deno.test('handleEmptyElementTag', () => {
     cx.newElement('root');
     cx.state = 'EMPTY_ELEMENT_TAG';
     cx.newElement('test');
-    const [[event0, element0], [event1, element1]] = handler.handleEmptyElementTag(cx, '>');
+    const [[event0, element0], [event1, element1]] = handleEmptyElementTag(cx, '>');
     assertEquals(event0, 'start_element');
     assertEquals(element0.qName, 'test');
     assertEquals(event1, 'end_element');
@@ -284,25 +317,25 @@ Deno.test('handleEmptyElementTag', () => {
     assertEquals(cx.state, 'GENERAL_STUFF');
     // Error
     cx.state = 'EMPTY_ELEMENT_TAG';
-    assertThrows(() => handler.handleEmptyElementTag(cx, ' '));
+    assertThrows(() => handleEmptyElementTag(cx, ' '));
 });
 
 Deno.test('handleAttributeName', () => {
     const cx = new XMLParseContext();
     // ATTRIBUTE_NAME_SAW_WHITE
     cx.state = 'ATTRIBUTE_NAME';
-    handler.handleAttributeName(cx, ' ');
+    handleAttributeName(cx, ' ');
     assertEquals(cx.state, 'ATTRIBUTE_NAME_SAW_WHITE');
     // ATTRIBUTE_EQUAL
     cx.state = 'ATTRIBUTE_NAME';
     cx.newElement('a');
     cx.appendMemento('test');
-    handler.handleAttributeName(cx, '=');
+    handleAttributeName(cx, '=');
     assertEquals(cx.state, 'ATTRIBUTE_EQUAL');
     assertEquals(cx.peekElement()!.attributes[0].qName, 'test');
     // Error
     cx.state = 'ATTRIBUTE_NAME';
-    assertThrows(() => handler.handleAttributeName(cx, '>'));
+    assertThrows(() => handleAttributeName(cx, '>'));
 });
 
 Deno.test('handleAttributeNameSawWhite', () => {
@@ -311,24 +344,24 @@ Deno.test('handleAttributeNameSawWhite', () => {
     cx.state = 'ATTRIBUTE_NAME_SAW_WHITE';
     cx.newElement('a');
     cx.appendMemento('test');
-    handler.handleAttributeNameSawWhite(cx, '=');
+    handleAttributeNameSawWhite(cx, '=');
     assertEquals(cx.state, 'ATTRIBUTE_EQUAL');
     assertEquals(cx.peekElement()!.attributes[0].qName, 'test');
     // Error
     cx.state = 'ATTRIBUTE_NAME_SAW_WHITE';
-    assertThrows(() => handler.handleAttributeNameSawWhite(cx, 'a'));
+    assertThrows(() => handleAttributeNameSawWhite(cx, 'a'));
 });
 
 Deno.test('handleAttributeEqual', () => {
     const cx = new XMLParseContext();
     // ATTRIBUTE_VALUE_START
     cx.state = 'ATTRIBUTE_EQUAL';
-    handler.handleAttributeEqual(cx, '"');
+    handleAttributeEqual(cx, '"');
     assertEquals(cx.state, 'ATTRIBUTE_VALUE_START');
     assertEquals(cx.quote, '"');
     // Error
     cx.state = 'ATTRIBUTE_EQUAL';
-    assertThrows(() => handler.handleAttributeEqual(cx, 'a'));
+    assertThrows(() => handleAttributeEqual(cx, 'a'));
 });
 
 Deno.test('handleAttributeValueStart', () => {
@@ -340,7 +373,7 @@ Deno.test('handleAttributeValueStart', () => {
     cx.peekElement()!.newAttribute('b');
     cx.quote = '"';
     cx.appendMemento('test');
-    handler.handleAttributeValueStart(cx, '"');
+    handleAttributeValueStart(cx, '"');
     assertEquals(cx.state, 'ATTRIBUTE_VALUE_END');
     assertEquals(cx.peekElement()!.attributes[0].value, 'test');
 });
@@ -349,23 +382,23 @@ Deno.test('handleAttributeValueEnd', () => {
     const cx = new XMLParseContext();
     // START_TAG_STUFF
     cx.state = 'ATTRIBUTE_VALUE_END';
-    handler.handleAttributeValueEnd(cx, ' ');
+    handleAttributeValueEnd(cx, ' ');
     assertEquals(cx.state, 'START_TAG_STUFF');
     // EMPTY_ELEMENT_TAG
     cx.state = 'ATTRIBUTE_VALUE_END';
-    handler.handleAttributeValueEnd(cx, '/');
+    handleAttributeValueEnd(cx, '/');
     assertEquals(cx.state, 'EMPTY_ELEMENT_TAG');
     // start_element & GENERAL_STUFF
     cx.newElement('root');
     cx.state = 'ATTRIBUTE_VALUE_END';
     cx.newElement('a');
-    const [[event, element]] = handler.handleAttributeValueEnd(cx, '>');
+    const [[event, element]] = handleAttributeValueEnd(cx, '>');
     assertEquals(event, 'start_element');
     assertEquals(element.qName, 'a');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // Error
     cx.state = 'ATTRIBUTE_VALUE_END';
-    assertThrows(() => handler.handleAttributeValueEnd(cx, 'a'));
+    assertThrows(() => handleAttributeValueEnd(cx, 'a'));
 });
 
 Deno.test('handleEndTag', () => {
@@ -375,17 +408,17 @@ Deno.test('handleEndTag', () => {
     cx.newElement('a');
     cx.newElement('test');
     cx.appendMemento('test');
-    const [[event, element]] = handler.handleEndTag(cx, '>');
+    const [[event, element]] = handleEndTag(cx, '>');
     assertEquals(event, 'end_element');
     assertEquals(element.qName, 'test');
     assertEquals(cx.state, 'GENERAL_STUFF');
     // END_TAG_SAW_WHITE
     cx.state = 'END_TAG';
-    handler.handleEndTag(cx, ' ');
+    handleEndTag(cx, ' ');
     assertEquals(cx.state, 'END_TAG_SAW_WHITE');
     // Error
     cx.state = 'END_TAG';
-    assertThrows(() => handler.handleEndTag(cx, '?'));
+    assertThrows(() => handleEndTag(cx, '?'));
 });
 
 
@@ -395,18 +428,18 @@ Deno.test('handleEndTagSawWhite', () => {
     cx.state = 'END_TAG_SAW_WHITE';
     cx.newElement('test');
     cx.appendMemento('test');
-    const [[event0], [event1]] = handler.handleEndTagSawWhite(cx, '>');
+    const [[event0], [event1]] = handleEndTagSawWhite(cx, '>');
     assertEquals(event0, 'end_element');
     assertEquals(event1, 'end_document');
     assertEquals(cx.state, 'AFTER_DOCUMENT');
     // Error
     cx.state = 'END_TAG';
-    assertThrows(() => handler.handleEndTagSawWhite(cx, 'a'));
+    assertThrows(() => handleEndTagSawWhite(cx, 'a'));
 });
 
 Deno.test('handleAfterDocument', () => {
     const cx = new XMLParseContext();
     // Error
     cx.state = 'AFTER_DOCUMENT';
-    assertThrows(() => handler.handleAfterDocument(cx, 'a'));
+    assertThrows(() => handleAfterDocument(cx, 'a'));
 });

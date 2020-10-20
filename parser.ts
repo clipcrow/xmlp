@@ -10,7 +10,32 @@ import {
     ElementInfo,
 } from './context.ts';
 
-import * as handler from './handler.ts';
+import {
+    handleBeforeDocument,
+    handleGeneralStuff,
+    handleFoundLT,
+    handleProcInst,
+    handleProcInstEnding,
+    handleSgmlDecl,
+    handleCdata,
+    handleCdataEnding,
+    handleCdataEnding2,
+    handleComment,
+    handleCommentEnding,
+    handleCommentEnding2,
+    handleDoctype,
+    handleStartTag,
+    handleStartTagStuff,
+    handleEmptyElementTag,
+    handleAttributeName,
+    handleAttributeNameSawWhite,
+    handleAttributeEqual,
+    handleAttributeValueStart,
+    handleAttributeValueEnd,
+    handleEndTag,
+    handleEndTagSawWhite,
+    handleAfterDocument,
+} from './handler.ts';
 
 export abstract class ParserBase implements XMLLocator {
     private _cx = new XMLParseContext(this);
@@ -51,30 +76,30 @@ export abstract class ParserBase implements XMLLocator {
         AFTER_DOCUMENT
     */
     constructor() {
-        this.appendHandler('BEFORE_DOCUMENT', handler.handleBeforeDocument);
-        this.appendHandler('GENERAL_STUFF', handler.handleGeneralStuff);
-        this.appendHandler('FOUND_LT', handler.handleFoundLT);
-        this.appendHandler('PROC_INST', handler.handleProcInst);
-        this.appendHandler('PROC_INST_ENDING', handler.handleProcInstEnding);
-        this.appendHandler('SGML_DECL', handler.handleSgmlDecl);
-        this.appendHandler('CDATA', handler.handleCdata);
-        this.appendHandler('CDATA_ENDING', handler.handleCdataEnding);
-        this.appendHandler('CDATA_ENDING_2', handler.handleCdataEnding2);
-        this.appendHandler('COMMENT', handler.handleComment);
-        this.appendHandler('COMMENT_ENDING', handler.handleCommentEnding);
-        this.appendHandler('COMMENT_ENDING_2', handler.handleCommentEnding2);
-        this.appendHandler('DOCTYPE', handler.handleDoctype);
-        this.appendHandler('START_TAG', handler.handleStartTag);
-        this.appendHandler('START_TAG_STUFF', handler.handleStartTagStuff);
-        this.appendHandler('EMPTY_ELEMENT_TAG', handler.handleEmptyElementTag);
-        this.appendHandler('ATTRIBUTE_NAME', handler.handleAttributeName);
-        this.appendHandler('ATTRIBUTE_NAME_SAW_WHITE', handler.handleAttributeNameSawWhite);
-        this.appendHandler('ATTRIBUTE_EQUAL', handler.handleAttributeEqual);
-        this.appendHandler('ATTRIBUTE_VALUE_START', handler.handleAttributeValueStart);
-        this.appendHandler('ATTRIBUTE_VALUE_END', handler.handleAttributeValueEnd);
-        this.appendHandler('END_TAG', handler.handleEndTag);
-        this.appendHandler('END_TAG_SAW_WHITE', handler.handleEndTagSawWhite);
-        this.appendHandler('AFTER_DOCUMENT', handler.handleAfterDocument);
+        this.appendHandler('BEFORE_DOCUMENT', handleBeforeDocument);
+        this.appendHandler('GENERAL_STUFF', handleGeneralStuff);
+        this.appendHandler('FOUND_LT', handleFoundLT);
+        this.appendHandler('PROC_INST', handleProcInst);
+        this.appendHandler('PROC_INST_ENDING', handleProcInstEnding);
+        this.appendHandler('SGML_DECL', handleSgmlDecl);
+        this.appendHandler('CDATA', handleCdata);
+        this.appendHandler('CDATA_ENDING', handleCdataEnding);
+        this.appendHandler('CDATA_ENDING_2', handleCdataEnding2);
+        this.appendHandler('COMMENT', handleComment);
+        this.appendHandler('COMMENT_ENDING', handleCommentEnding);
+        this.appendHandler('COMMENT_ENDING_2', handleCommentEnding2);
+        this.appendHandler('DOCTYPE', handleDoctype);
+        this.appendHandler('START_TAG', handleStartTag);
+        this.appendHandler('START_TAG_STUFF', handleStartTagStuff);
+        this.appendHandler('EMPTY_ELEMENT_TAG', handleEmptyElementTag);
+        this.appendHandler('ATTRIBUTE_NAME', handleAttributeName);
+        this.appendHandler('ATTRIBUTE_NAME_SAW_WHITE', handleAttributeNameSawWhite);
+        this.appendHandler('ATTRIBUTE_EQUAL', handleAttributeEqual);
+        this.appendHandler('ATTRIBUTE_VALUE_START', handleAttributeValueStart);
+        this.appendHandler('ATTRIBUTE_VALUE_END', handleAttributeValueEnd);
+        this.appendHandler('END_TAG', handleEndTag);
+        this.appendHandler('END_TAG_SAW_WHITE', handleEndTagSawWhite);
+        this.appendHandler('AFTER_DOCUMENT', handleAfterDocument);
     }
 
     protected get cx(): XMLParseContext {
