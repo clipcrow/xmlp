@@ -86,7 +86,7 @@ console.log([...events].filter(({ name }) => {
 
 Will be realized eventually.
 
-### JSDoc
+## JSDoc
 
 Usually all you need see is mod.ts, SAXParser class or PullParser class.
 
