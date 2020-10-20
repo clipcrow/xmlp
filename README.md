@@ -86,6 +86,12 @@ console.log([...events].filter(({ name }) => {
 
 Will be realized eventually.
 
+### JSDoc
+
+Usually all you need see is mod.ts, SAXParser class or PullParser class.
+
+https://doc.deno.land/https/deno.land/x/xmlp/mod.ts
+
 ## Acknowledgments
 
 The basic logic of this XML parser was obtained by reading the source code of [sax-js](https://github.com/isaacs/sax-js). Thanks.
