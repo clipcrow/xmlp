@@ -46,7 +46,7 @@ on(event: 'comment', listener: (comment: string) => void): this;
 on(event: 'end_element', listener: (element: ElementInfo) => void): this;
 on(event: 'end_prefix_mapping', listener: (ns: string, uri: string) => void): this;
 on(event: 'end_document', listener: () => void): this;
-on(event: 'error', listener: (error: any) => void): this;
+on(event: 'error', listener: (error: XMLParseError) => void): this;
 ```
 
 You can use "SAXParser" on Deno's stream i/o because this is a simple "UnderlyingSink<Uint8Array>" impl.
