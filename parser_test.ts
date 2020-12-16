@@ -141,7 +141,7 @@ Deno.test('PullParser', async () => {
     }
 });
 
-Deno.test('PullParser XMLParseError', async () => {
+Deno.test('PullParser XMLParseError', () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</aaaaaa>');
     assertEquals(events.next().value, { name: 'start_document' });
@@ -151,7 +151,7 @@ Deno.test('PullParser XMLParseError', async () => {
     assertEquals(events.next().done, true);
 });
 
-Deno.test('PullParser iterator throws Error', async () => {
+Deno.test('PullParser iterator throws Error', () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</a>');
     assertEquals(events.next().value, { name: 'start_document' });
@@ -159,7 +159,7 @@ Deno.test('PullParser iterator throws Error', async () => {
     assertEquals(events.next().done, true);
 });
 
-Deno.test('PullParser iterator throws XMLParseError', async () => {
+Deno.test('PullParser iterator throws XMLParseError', () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</a>');
     assertEquals(events.next().value, { name: 'start_document' });
@@ -170,7 +170,7 @@ Deno.test('PullParser iterator throws XMLParseError', async () => {
     assertEquals(events.next().done, true);
 });
 
-Deno.test('PullParser iterator returns', async () => {
+Deno.test('PullParser iterator returns', () => {
     const parser = new PullParser();
     const events = parser.parse('<a>b</a>');
     assertEquals(events.next().value, { name: 'start_document' });
