@@ -7,6 +7,7 @@ export {
 
 export type {
     PullResult,
+    SAXEvent,
 } from './parser.ts';
 
 export {

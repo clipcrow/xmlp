@@ -142,6 +142,24 @@ export abstract class ParserBase implements XMLLocator {
 }
 
 /**
+ * A catalog of events.
+ */
+export interface SAXEvent {
+    start_document: () => void;
+    processing_instruction: (procInst: string) => void;
+    sgml_declaration: (sgmlDecl: string) => void;
+    text: (text: string, element: ElementInfo, cdata: boolean) => void;
+    doctype: (doctype: string) => void;
+    start_prefix_mapping: (ns: string, uri: string) => void;
+    start_element: (element: ElementInfo) => void;
+    comment: (comment: string) => void;
+    end_element: (element: ElementInfo) => void;
+    end_prefix_mapping: (ns: string, uri: string) => void;
+    end_document: () => void;
+    error: (error: XMLParseError) => void;
+}
+
+/**
  * SAX-style XML parser.
  */
 export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> {
@@ -232,20 +250,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         }
     }
 
-    on(event: 'start_document', listener: () => void): this;
-    on(event: 'processing_instruction', listener: (procInst: string) => void): this;
-    on(event: 'sgml_declaration', listener: (sgmlDecl: string) => void): this;
-    on(event: 'text', listener: (text: string, element: ElementInfo, cdata: boolean) => void): this;
-    on(event: 'doctype', listener: (doctype: string) => void): this;
-    on(event: 'start_prefix_mapping', listener: (ns: string, uri: string) => void): this;
-    on(event: 'start_element', listener: (element: ElementInfo) => void): this;
-    on(event: 'comment', listener: (comment: string) => void): this;
-    on(event: 'end_element', listener: (element: ElementInfo) => void): this;
-    on(event: 'end_prefix_mapping', listener: (ns: string, uri: string) => void): this;
-    on(event: 'end_document', listener: () => void): this;
-    on(event: 'error', listener: (error: XMLParseError) => void): this;
-    // deno-lint-ignore no-explicit-any
-    on(event: string, listener: (...arg: any[]) => void): this {
+    on<K extends keyof SAXEvent>(event: K, listener: SAXEvent[K]): this {
         const list = this._listeners[event] || [];
         list.push(listener);
         this._listeners[event] = list;
