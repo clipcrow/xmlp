@@ -70,7 +70,6 @@ Deno.test('SAXParser on & parse(Deno.Reader)', async () => {
     });
     const file = await Deno.open('parser_test.xml');
     await parser.parse(file);
-    file.close();
     assertEquals(assertionCount, 3);
     assertEquals(elementCount, 18);
 });

@@ -1,6 +1,10 @@
 // Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
 
 import {
+    readableStreamFromReader,
+ } from './deps.ts';
+
+import {
     XMLParseHandler,
     XMLParseContext,
     XMLParseEvent,
@@ -166,6 +170,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     // deno-lint-ignore no-explicit-any
     private _listeners: { [name: string]: ((...arg: any[]) => void)[] } = {};
     private _controller?: WritableStreamDefaultController;
+    private _encoding?: string;
 
     protected fireListeners(event: XMLParseEvent) {
         const [name, ...args] = event;
@@ -207,7 +212,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         try {
             this._controller = controller;
             // TextDecoder can resolve BOM.
-            this.chunk = new TextDecoder().decode(chunk);
+            this.chunk = new TextDecoder(this._encoding).decode(chunk);
             this.run();
         } finally {
             this._controller = undefined;
@@ -238,15 +243,21 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
     /**
      * Execute XML pull parsing.
      * @param source Target XML.
+     * @param encoding When the source is Deno.Reader or Uint8Array, specify the encoding.
      */
-    async parse(source: Deno.Reader | Uint8Array | string) {
+    async parse(source: Deno.Reader | Uint8Array | string, encoding?: string) {
+        this._encoding = encoding;
         if (typeof source === 'string') {
             this.chunk = source;
             this.run();
         } else if (source instanceof Uint8Array) {
             this.write(source);
         } else {
-            await Deno.copy(source, this.getWriter());
+            await readableStreamFromReader(source).pipeThrough(
+                new TextDecoderStream(this._encoding),
+            ).pipeTo(
+                new WritableStream<string>({ write: str => this.parse(str) }),
+            );
         }
     }
 
@@ -309,10 +320,11 @@ export class PullParser extends ParserBase {
     /**
      * Execute XML pull parsing. this is the ES6 Generator.
      * @param source Target XML.
+     * @param encoding When the source is Uint8Array, specify the encoding.
      * @return ES6 Iterator, "value" property is a XML event object typed {@code PullResult} .
      */
-    * parse(source: Uint8Array | string) {
-        this.chunk = typeof source === 'string' ? source : new TextDecoder().decode(source);
+    * parse(source: Uint8Array | string, encoding?: string) {
+        this.chunk = typeof source === 'string' ? source : new TextDecoder(encoding).decode(source);
         try {
             while(this.hasNext()) {
                 const state = this.cx.state;

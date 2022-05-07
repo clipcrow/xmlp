@@ -29,7 +29,6 @@ parser.on('start_prefix_mapping', (ns, uri) => {
 // run parser, input source is Deno.Reader or Uint8Array or string
 const reader = await Deno.open('parser_test.xml');
 await parser.parse(reader);
-reader.close();
 ```
 
 SAX event listener register definitions are below.

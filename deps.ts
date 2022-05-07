@@ -4,4 +4,8 @@ export {
     assert,
     assertEquals,
     assertThrows,
-} from 'https://deno.land/std@0.116.0/testing/asserts.ts';
+} from 'https://deno.land/std@0.138.0/testing/asserts.ts';
+
+export {
+    readableStreamFromReader,
+} from 'https://deno.land/std@0.138.0/streams/conversion.ts';
