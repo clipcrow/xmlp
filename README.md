@@ -28,7 +28,7 @@ parser.on('start_prefix_mapping', (ns, uri) => {
 
 // run parser, input source is Deno.Reader or Uint8Array or string
 const reader = await Deno.open('parser_test.xml');
-await parser.parse(reader);
+await parser.parse(reader, 'shift_jis'); // 2nd param is optional, specifies your XML encoding.
 ```
 
 SAX event listener register definitions are below.
@@ -71,7 +71,7 @@ const parser = new PullParser();
 
 // create an ES6 generator
 const uint8Array = await Deno.readFile('parser_test.xml');
-const events = parser.parse(uint8Array);
+const events = parser.parse(uint8Array /*, encoding */);
 
 // pull events, using iterator
 const event = events.next();
