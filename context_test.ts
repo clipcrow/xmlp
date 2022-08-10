@@ -2,7 +2,7 @@
 
 import {
     assertEquals,
-} from './deps.ts';
+} from './dev_deps.ts';
 
 import {
     Attribute,

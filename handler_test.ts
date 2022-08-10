@@ -3,7 +3,7 @@
 import {
     assertEquals,
     assertThrows,
-} from './deps.ts';
+} from './dev_deps.ts';
 
 import {
     XMLParseContext,
