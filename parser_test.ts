@@ -96,6 +96,16 @@ Deno.test('SAXParser parse(string)', () => {
     assertEquals(flag, true);
 });
 
+Deno.test('SAXParser self-closing end_document', () => {
+    const parser = new SAXParser();
+    let flag = false;
+    parser.on('end_document', () => {
+        flag = true;
+    });
+    parser.parse('<hello/>');
+    assertEquals(flag, true);
+});
+
 Deno.test('marshallEvent', () => {
     class TestParser extends PullParser {
         marshallEvent(event: XMLParseEvent): PullResult {
