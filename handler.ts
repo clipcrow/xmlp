@@ -293,7 +293,7 @@ function emitEndElement(cx: XMLParseContext, qName: string): XMLParseEvent[] {
     return events;
 }
 
-// EMPTY_ELEMENT_TAG; start_element & end_element & GENERAL_STUFF, Error
+// EMPTY_ELEMENT_TAG; start_element & end_element & GENERAL_STUFF, start_element & end_element & end_document & AFTER_DOCUMENT, Error
 export function handleEmptyElementTag(cx: XMLParseContext, c: string): XMLParseEvent[] {
     let events: XMLParseEvent[] = [];
     if (c !== '>') {
@@ -302,7 +302,12 @@ export function handleEmptyElementTag(cx: XMLParseContext, c: string): XMLParseE
     const element = cx.peekElement()!;
     element.emptyElement = true;
     events = emitStartElement(cx).concat(emitEndElement(cx, element.qName));
-    cx.state = 'GENERAL_STUFF';
+    if (cx.elementLength === 0) {
+        events.push(['end_document']);
+        cx.state = 'AFTER_DOCUMENT';
+    } else {
+        cx.state = 'GENERAL_STUFF';
+    }
     return events;
 }
 
