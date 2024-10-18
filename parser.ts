@@ -1,4 +1,4 @@
-// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+// Copyright 2020, 2024 Masataka Kurihara. All rights reserved. MIT license.
 
 import {
     XMLParseHandler,
@@ -213,27 +213,6 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array> 
         } finally {
             this._controller = undefined;
         }
-    }
-
-    /**
-     * Convenient function.
-     */
-    getStream(): WritableStream<Uint8Array> {
-        return new WritableStream<Uint8Array>(this);
-    }
-
-    /**
-     * Convenient function. {@code SAXParser#getStream} is used internally.
-     */
-    getWriter(): Deno.Writer {
-        const streamWriter = this.getStream().getWriter();
-        return {
-            async write(p: Uint8Array): Promise<number> {
-                await streamWriter.ready;
-                await streamWriter.write(p);
-                return p.length;
-            }
-        };
     }
 
     /**

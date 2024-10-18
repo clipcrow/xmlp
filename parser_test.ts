@@ -1,4 +1,4 @@
-// Copyright 2020 Masataka Kurihara. All rights reserved. MIT license.
+// Copyright 2020, 2024 Masataka Kurihara. All rights reserved. MIT license.
 
 import {
     assert,
@@ -23,15 +23,15 @@ import {
 Deno.test('ParserBase chunk & hasNext & readNext & position', () => {
     // protected -> public visiblity
     class TestParser extends ParserBase {
-        set chunk(chunk: string) {
+        override set chunk(chunk: string) {
             super.chunk = chunk;
         }
 
-        readNext(): string {
+        override readNext(): string {
             return super.readNext();
         }
 
-        hasNext(): boolean {
+        override hasNext(): boolean {
             return super.hasNext();
         }
     }
@@ -108,7 +108,7 @@ Deno.test('SAXParser self-closing end_document', () => {
 
 Deno.test('marshallEvent', () => {
     class TestParser extends PullParser {
-        marshallEvent(event: XMLParseEvent): PullResult {
+        override marshallEvent(event: XMLParseEvent): PullResult {
             return super.marshallEvent(event);
         }
     }
