@@ -289,6 +289,24 @@ Deno.test('SAXParser white space handling', () => {
     assertEquals(expectedTexts.length, 0);
 });
 
+Deno.test('SAXParser end of document handling', () => {
+    const parseErrorMessages = (input: string): Array<string> => {
+        const parser = new SAXParser();
+        const errors: Array<XMLParseError> = [];
+        parser.on('error', (err: XMLParseError) => {
+            errors.push(err);
+        });
+        parser.parse(input);
+        return errors.map(e => e.message);
+    }
+
+    assertEquals(parseErrorMessages('<xml><a>a</a></xml>'), []);
+    assertEquals(parseErrorMessages('<xml><a>a</a>'), ["Unexpected end of document"]);
+    assertEquals(parseErrorMessages('<xml><a>a</'), ["Unexpected end of document"]);
+    assertEquals(parseErrorMessages('<xml><a'), ["Unexpected end of document"]);
+    assertEquals(parseErrorMessages(''), ["Unexpected end of document"]);
+});
+
 Deno.test('marshallEvent', () => {
     class TestParser extends PullParser {
         override marshallEvent(event: XMLParseEvent): PullResult {
