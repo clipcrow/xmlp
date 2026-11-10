@@ -212,6 +212,14 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array>,
         }
     }
 
+    protected end() {
+        if (this.cx.state !== 'AFTER_DOCUMENT') {
+            const e = new XMLParseError("Unexpected end of document", this.cx);
+            this.fireListeners(['error', e]);
+            this._controller?.error(e);
+        }
+    }
+
     /**
      * implements UnderlyingSink<Uint8Array>
      * @param chunk XML data chunk
@@ -241,6 +249,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array>,
             // processing this empty chunk doesn't hurt.
             this.chunk = this._decoder.decode(new Uint8Array(), {stream: false});
             this.run();
+            this.end();
         } finally {
             this._controller = undefined;
         }
@@ -258,6 +267,7 @@ export class SAXParser extends ParserBase implements UnderlyingSink<Uint8Array>,
         if (typeof source === 'string') {
             this.chunk = source;
             this.run();
+            this.end();
         } else if (source instanceof Uint8Array) {
             this.write(source);
             this.close();
